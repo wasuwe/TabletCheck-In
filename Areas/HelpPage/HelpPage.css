@@ -1,0 +1,278 @@
+﻿/* ==========================================================================
+   TABLET CHECK-IN : PREMIUM API PORTAL THEME (ULTRA MODERN)
+   ========================================================================== */
+
+
+.help-page h1, .help-page .h1, .help-page h2, .help-page .h2, .help-page h3, .help-page .h3,
+#body.help-page, .help-page-table th, .help-page-table pre, .help-page-table p {
+    font-family: 'Inter', "Segoe UI", Tahoma, Geneva, sans-serif;
+}
+
+/* --- พื้นหลังและ Ambient Glow --- */
+body {
+    background-color: #0b1116;
+    color: #e0e0e0;
+    margin: 0;
+    position: relative;
+}
+
+    /* แสง Glowing Orbs พื้นหลัง */
+    body::before, body::after {
+        content: '';
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(120px);
+        z-index: -1;
+        pointer-events: none;
+        animation: float-glow 20s infinite alternate ease-in-out;
+    }
+
+    body::before {
+        width: 400px;
+        height: 400px;
+        background: rgba(0, 255, 136, 0.05);
+        top: -100px;
+        left: -100px;
+    }
+
+    body::after {
+        width: 500px;
+        height: 500px;
+        background: rgba(0, 176, 155, 0.05);
+        bottom: -150px;
+        right: -100px;
+        animation-delay: -5s;
+    }
+
+@keyframes float-glow {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    100% {
+        transform: translate(50px, 50px) scale(1.2);
+    }
+}
+
+#body.help-page {
+    font-size: 14px;
+    line-height: 1.7;
+    background-color: transparent;
+}
+
+/* --- Headings --- */
+.help-page h1 {
+    font-size: 36px;
+    font-weight: 800;
+    color: #00ff88;
+    margin-top: 0;
+    text-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+    letter-spacing: -0.5px;
+}
+
+.help-page h2 {
+    font-size: 24px;
+    color: #fff;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 12px;
+    margin-top: 40px;
+}
+
+.help-page h3 {
+    font-size: 18px;
+    color: #00b09b;
+    margin-top: 30px;
+    font-weight: 600;
+}
+
+/* --- Links & Buttons --- */
+.help-page a {
+    color: #00ff88;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+    .help-page a:hover {
+        color: #fff;
+        text-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+    }
+
+/* ปุ่ม Back พรีเมียม */
+a.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 255, 136, 0.05);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    color: #00ff88;
+    padding: 10px 24px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    backdrop-filter: blur(10px);
+    transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+    a.btn-back:hover {
+        background: #00ff88;
+        color: #0b1116;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0, 255, 136, 0.3);
+    }
+
+/* --- โครงสร้าง Glassmorphism (Cards) --- */
+.content-wrapper {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header.help-page {
+    background: rgba(11, 17, 22, 0.8);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+    padding: 25px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.help-page .featured {
+    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+    padding: 30px 35px;
+    border-radius: 20px;
+    margin: 30px auto;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.help-page .main-content {
+    background: rgba(20, 28, 36, 0.4);
+    padding: 40px;
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.3);
+    margin-bottom: 50px;
+    backdrop-filter: blur(10px);
+}
+
+/* --- ตาราง (Modern Data Grid) --- */
+.help-page-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 20px 0 35px 0;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+    .help-page-table th {
+        background: rgba(0, 0, 0, 0.5);
+        color: #aaa;
+        padding: 16px 20px;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+        .help-page-table th:first-child {
+            border-top-left-radius: 12px;
+        }
+
+        .help-page-table th:last-child {
+            border-top-right-radius: 12px;
+        }
+
+    .help-page-table td {
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        color: #cfcfcf;
+    }
+
+    .help-page-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+        .help-page-table tbody tr:hover td {
+            background-color: rgba(0, 255, 136, 0.05);
+            color: #fff;
+        }
+
+        .help-page-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+/* --- กล่อง Code Sample (Terminal Style) --- */
+.help-page .sample-header {
+    background: #00ff88;
+    color: #0b1116;
+    padding: 8px 20px;
+    font-weight: 800;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: inline-block;
+    margin: 20px 0px 0px 0px;
+    border-radius: 8px 8px 0 0;
+}
+
+.help-page .sample-content, .help-page pre.wrapped {
+    background: #05080a;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    padding: 20px;
+    color: #a8ff78;
+    border-radius: 0 12px 12px 12px;
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    font-size: 0.9rem;
+    overflow-x: auto;
+    box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.8);
+}
+
+.help-page pre.wrapped {
+    border-radius: 12px;
+    margin-top: 10px;
+}
+
+/* --- กล่อง Warning --- */
+.help-page .warning-message-container {
+    padding: 16px 20px;
+    color: #ffd166;
+    background: rgba(255, 209, 102, 0.1);
+    border-left: 4px solid #ffd166;
+    border-radius: 0 8px 8px 0;
+    margin: 25px 0;
+}
+
+/* --- ความกว้างคอลัมน์ตาราง --- */
+.help-page .api-name {
+    width: 35%;
+    font-weight: 600;
+    color: #fff;
+}
+
+.help-page .api-documentation {
+    width: 65%;
+    color: #aaa;
+}
+
+.help-page .parameter-name {
+    width: 25%;
+    color: #00ff88;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.help-page .parameter-documentation {
+    width: 45%;
+}
+
+.help-page .parameter-type {
+    width: 30%;
+    color: #888;
+    font-size: 0.85rem;
+}

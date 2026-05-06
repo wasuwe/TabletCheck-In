@@ -1,0 +1,24 @@
+﻿@using System.Web.Http
+@using Tablet_Check_In.Areas.HelpPage.ModelDescriptions
+@model ModelDescription
+
+<link type="text/css" href="~/Areas/HelpPage/HelpPage.css" rel="stylesheet" />
+
+<div id="body" class="help-page">
+    <section class="featured" style="padding: 15px 25px; margin-bottom: 0;">
+        <div class="content-wrapper" style="padding: 0;">
+            <a href="@Url.Action("Index", "Help")" class="btn-back">
+                <i class="fa fa-arrow-left"></i> Back to API Directory
+            </a>
+        </div>
+    </section>
+
+    <section class="content-wrapper main-content clear-fix">
+        <h1 style="border-bottom:none; margin-bottom: 5px;">
+            <i class="fa fa-cube mr-2" style="color: rgba(255,255,255,0.2);"></i>@Model.Name
+        </h1>
+        <p style="color: #888; font-size: 1.1rem; margin-bottom: 30px;">@Model.Documentation</p>
+
+        @Html.DisplayFor(m => Model)
+    </section>
+</div>

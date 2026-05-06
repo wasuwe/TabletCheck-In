@@ -1,0 +1,29 @@
+﻿@using System.Web.Http
+@using Tablet_Check_In.Areas.HelpPage.Models
+@model HelpPageApiModel
+
+@{
+    var description = Model.ApiDescription;
+    ViewBag.Title = description.HttpMethod.Method + " " + description.RelativePath;
+}
+
+<link type="text/css" href="~/Areas/HelpPage/HelpPage.css" rel="stylesheet" />
+
+<div id="body" class="help-page">
+    <section class="featured" style="padding: 15px 25px; margin-bottom: 0;">
+        <div class="content-wrapper" style="padding: 0;">
+            <a href="@Url.Action("Index", "Help")" class="btn-back">
+                <i class="fa fa-arrow-left"></i> Back to API Directory
+            </a>
+        </div>
+    </section>
+
+    <section class="content-wrapper main-content clear-fix">
+        <h1 class="text-break" style="font-family: 'JetBrains Mono', monospace; font-size: 2rem;">
+            <span style="color: #fff; opacity: 0.5;">[ @description.HttpMethod.Method ]</span>
+            @description.RelativePath
+        </h1>
+
+        @Html.DisplayForModel()
+    </section>
+</div>

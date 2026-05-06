@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Dapper;
 using TabletCheckIn.Models;
+using TabletCheckIn.Utility;
 using Check_Sheet_Online;
 
 namespace TabletCheckIn.Repositories
@@ -14,12 +15,11 @@ namespace TabletCheckIn.Repositories
         {
             using (var conn = PostgreSqlDbConnection.GetConnection())
             {
-                // เพิ่ม u.user_role เข้าไปใน SELECT และ GROUP BY
                 string sql = @"
-            SELECT u.username, u.password, u.full_name, u.email, u.user_role, STRING_AGG(ud.dept_name, ',') AS dept_name 
+            SELECT u.username, u.full_name, u.email, u.user_role, STRING_AGG(ud.dept_name, ',') AS dept_name
             FROM tablet_check_in.users u
             LEFT JOIN tablet_check_in.user_departments ud ON u.username = ud.username
-            GROUP BY u.username, u.password, u.full_name, u.email, u.user_role
+            GROUP BY u.username, u.full_name, u.email, u.user_role
             ORDER BY u.username";
 
                 return conn.Query<UserModel>(sql).ToList();
@@ -33,7 +33,7 @@ namespace TabletCheckIn.Repositories
                 conn.Open();
                 using (var tx = conn.BeginTransaction())
                 {
-                    string defaultPassword = "Canon1234";
+                    string defaultPassword = PasswordHasher.Hash("Canon1234");
 
                     // ดักจับกรณีไม่ได้เลือก Role มา ให้เป็น User เบื้องต้น
                     string role = string.IsNullOrWhiteSpace(req.user_role) ? "User" : req.user_role;

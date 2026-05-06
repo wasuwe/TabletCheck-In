@@ -1,25 +1,20 @@
-﻿using System;
+using System;
 using System.Web.Mvc;
 using TabletCheckIn.Repositories;
 using TabletCheckIn.Models;
+using TabletCheckIn.Utility;
 
 namespace TabletCheckIn.Controllers
 {
+    [AppAuthorize]
     public class DeviceController : Controller
     {
         private readonly DeviceRepository _deviceRepo = new DeviceRepository();
-        private readonly MonitorRepository _monitorRepo = new MonitorRepository(); // ยืมใช้ดึงรายชื่อแผนก
+        private readonly MonitorRepository _monitorRepo = new MonitorRepository();
 
-        // โหลดหน้า HTML 
         [HttpGet]
         public ActionResult Index()
         {
-            // ดักผู้ใช้ที่ยังไม่ Login
-            if (Session["Username"] == null)
-            {
-                return RedirectToAction("Index", "Auth");
-            }
-
             ViewBag.Title = "Manage Devices";
             ViewBag.FullName = Session["FullName"]?.ToString();
             return View();
@@ -28,9 +23,6 @@ namespace TabletCheckIn.Controllers
         [HttpGet]
         public JsonResult GetList()
         {
-            if (Session["Username"] == null)
-                return Json(new { status = "error", message = "Session expired." }, JsonRequestBehavior.AllowGet);
-
             try
             {
                 string currentUser = Session["Username"].ToString();
@@ -42,34 +34,24 @@ namespace TabletCheckIn.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[System Error] : {ex.Message}");
-                return Json(new
-                {
-                    status = "error",
-                    message = "ระบบขัดข้องชั่วคราว ไม่สามารถดึงข้อมูลได้ กรุณาติดต่อแผนก IT"
-                });
+                return Json(new { status = "error", message = "ระบบขัดข้องชั่วคราว ไม่สามารถดึงข้อมูลได้ กรุณาติดต่อแผนก IT" });
             }
         }
 
         [HttpGet]
         public JsonResult GetDepartments()
         {
-            // ถ้าเป็น Guest จะให้ currentUser เป็นค่าว่าง
-            string currentUser = Session["Username"]?.ToString() ?? "";
-            string userDeptSession = Session["UserDept"]?.ToString() ?? "";
-
             try
             {
+                string currentUser = Session["Username"].ToString();
+                string userDeptSession = Session["UserDept"]?.ToString() ?? "";
                 var depts = _monitorRepo.GetDepartments(currentUser, userDeptSession);
                 return Json(depts, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[System Error] : {ex.Message}");
-                return Json(new
-                {
-                    status = "error",
-                    message = "ระบบขัดข้องชั่วคราว ไม่สามารถดึงข้อมูลได้ กรุณาติดต่อแผนก IT"
-                });
+                return Json(new { status = "error", message = "ระบบขัดข้องชั่วคราว ไม่สามารถดึงข้อมูลได้ กรุณาติดต่อแผนก IT" });
             }
         }
 
@@ -77,9 +59,6 @@ namespace TabletCheckIn.Controllers
         [ValidateAntiForgeryToken]
         public JsonResult Save(DeviceSaveRequest req)
         {
-            if (Session["Username"] == null)
-                return Json(new { status = "error", message = "Session expired." });
-
             try
             {
                 string currentUser = Session["Username"].ToString();
@@ -91,11 +70,7 @@ namespace TabletCheckIn.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[System Error] : {ex.Message}");
-                return Json(new
-                {
-                    status = "error",
-                    message = "ระบบขัดข้องชั่วคราว ไม่สามารถดึงข้อมูลได้ กรุณาติดต่อแผนก IT"
-                });
+                return Json(new { status = "error", message = "ระบบขัดข้องชั่วคราว ไม่สามารถดึงข้อมูลได้ กรุณาติดต่อแผนก IT" });
             }
         }
 
@@ -103,9 +78,6 @@ namespace TabletCheckIn.Controllers
         [ValidateAntiForgeryToken]
         public JsonResult Delete(int del_id)
         {
-            if (Session["Username"] == null)
-                return Json(new { status = "error", message = "Session expired." });
-
             try
             {
                 _deviceRepo.DeleteDevice(del_id);
@@ -114,11 +86,7 @@ namespace TabletCheckIn.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[System Error] : {ex.Message}");
-                return Json(new
-                {
-                    status = "error",
-                    message = "ระบบขัดข้องชั่วคราว ไม่สามารถดึงข้อมูลได้ กรุณาติดต่อแผนก IT"
-                });
+                return Json(new { status = "error", message = "ระบบขัดข้องชั่วคราว ไม่สามารถดึงข้อมูลได้ กรุณาติดต่อแผนก IT" });
             }
         }
 

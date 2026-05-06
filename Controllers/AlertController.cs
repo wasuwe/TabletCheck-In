@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net.Mail;
 using System.Text;
@@ -24,7 +25,7 @@ namespace TabletCheckIn.Controllers.Api // แนะนำให้แยก Nam
         [Route("trigger")]
         public IHttpActionResult TriggerSend(string key)
         {
-            if (key != "tablet_auto_run_2026")
+            if (key != ConfigurationManager.AppSettings["AlertApiKey"])
             {
                 // ใช้ BadRequest แทน Json ของเดิม
                 return BadRequest("Unauthorized access");
@@ -44,7 +45,7 @@ namespace TabletCheckIn.Controllers.Api // แนะนำให้แยก Nam
         [Route("triggerCustom")]
         public IHttpActionResult TriggerSendCustom(string key, string dept, int? forceHour)
         {
-            if (key != "tablet_auto_run_2026") return BadRequest("Unauthorized access");
+            if (key != ConfigurationManager.AppSettings["AlertApiKey"]) return BadRequest("Unauthorized access");
             if (string.IsNullOrEmpty(dept)) return BadRequest("Department parameter is required.");
 
             int hourToUse = forceHour ?? DateTime.Now.Hour;

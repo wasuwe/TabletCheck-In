@@ -3,12 +3,14 @@ using System.Linq;
 using System.Web.Mvc;
 using TabletCheckIn.Repositories;
 using TabletCheckIn.Models;
+using TabletCheckIn.Utility;
 using System.IO;
 using ClosedXML.Excel;
 using System.Collections.Generic;
 
 namespace TabletCheckIn.Controllers
 {
+    [AppAuthorize]
     public class ReportController : Controller
     {
         private readonly ReportRepository _reportRepo = new ReportRepository();

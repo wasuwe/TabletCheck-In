@@ -1,0 +1,1404 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Monitor Center";
+
+    // 🌟 ตรวจสอบสิทธิ์ว่าคนล็อกอินอยู่เป็น Admin หรือ Staff หรือไม่
+    string currentUserRole = Session["UserRole"]?.ToString() ?? "Guest";
+    bool canSetupDevice = (currentUserRole == "Admin" || currentUserRole == "Staff");
+}
+
+@section Styles {
+    <link href="~/Content/tablet/flatpickr.min.css" rel="stylesheet" />
+    <link href="~/Content/tablet/dark.css" rel="stylesheet" />
+
+    <style>
+        /* --- วาง CSS เฉพาะของหน้า Monitor ที่นี่ --- */
+        .summary-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .summary-big {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1;
+            background: linear-gradient(135deg, #fff 30%, #00ff88 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ปุ่ม Neon สำหรับ Login ให้เด่นๆ */
+        .btn-neon {
+            background: linear-gradient(90deg, #00b09b, #96c93d);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 8px 20px;
+            box-shadow: 0 4px 15px rgba(0, 176, 155, 0.4);
+            transition: 0.3s;
+        }
+
+            .btn-neon:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(0, 176, 155, 0.6);
+                color: white;
+            }
+
+        .btn-warning-neon {
+            background: linear-gradient(90deg, #f39c12, #e74c3c);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 8px 20px;
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+            transition: 0.3s;
+        }
+
+            .btn-warning-neon:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(243, 156, 18, 0.6);
+                color: white;
+            }
+
+        .btn-outline-light {
+            border-radius: 50px;
+            padding: 8px 20px;
+            border: 1px solid rgba(255,255,255,0.3);
+            font-weight: 600;
+        }
+
+        /* Sidebar Update: เพิ่ม Z-Index ให้สูงที่สุด */
+        .sidebar-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9998 !important;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s ease;
+        }
+
+            .sidebar-backdrop.active {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+        .history-sidebar {
+            position: fixed;
+            top: 0;
+            right: -480px;
+            width: 450px;
+            max-width: 100vw;
+            height: 100vh;
+            background: #101920;
+            border-left: 1px solid rgba(255,255,255,0.1);
+            box-shadow: -10px 0 40px rgba(0,0,0,0.7);
+            z-index: 9999 !important;
+            transition: right .35s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+            .history-sidebar.active {
+                right: 0;
+            }
+
+        /* --- DONUT CHART CSS --- */
+        .donut-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .donut-chart {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            position: relative;
+            transition: all 1s ease;
+        }
+
+        .donut-hole {
+            width: 70%;
+            height: 70%;
+            background: rgba(20, 28, 38, 1);
+            border-radius: 50%;
+            position: absolute;
+            top: 15%;
+            left: 15%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .donut-pct-text {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .donut-label {
+            font-size: 0.6rem;
+            color: #aaa;
+            text-transform: uppercase;
+        }
+
+        .chart-legend {
+            flex: 1;
+            margin-left: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 2px;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .c-ok {
+            background-color: #00e676;
+        }
+
+        .c-delay {
+            background-color: #ffc107;
+        }
+
+        .c-miss {
+            background-color: #ff5252;
+        }
+
+        /* --- DEPARTMENT LIST --- */
+        .dept-list-container {
+            max-height: 140px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .dept-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 6px;
+            transition: 0.2s;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+            .dept-row:hover {
+                background: rgba(255,255,255,0.1);
+                border-color: rgba(0,255,136,0.3);
+            }
+
+        .dept-val {
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        /* 🌟 NEW: MULTI-SELECT DROPDOWN STYLE 🌟 */
+        .dept-dropdown-menu {
+            background: #101820;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            min-width: 250px;
+            max-height: 300px;
+            overflow-y: auto;
+            border-radius: 8px;
+            z-index: 1050;
+        }
+
+        .dept-checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #ddd;
+            user-select: none;
+            transition: 0.2s;
+        }
+
+            .dept-checkbox-item:hover {
+                background: rgba(255, 255, 255, 0.1);
+                color: #fff;
+            }
+
+            .dept-checkbox-item input[type="checkbox"] {
+                margin-right: 12px;
+                accent-color: #00ff88;
+                width: 16px;
+                height: 16px;
+                cursor: pointer;
+            }
+
+        .dropdown-toggle-custom {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fff;
+            border-radius: 8px;
+            height: 31px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0 15px;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+            .dropdown-toggle-custom:hover {
+                border-color: #00ff88;
+                color: #fff;
+                text-decoration: none;
+            }
+
+        /* --- TABLE & GENERAL --- */
+        .table-container {
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(30, 40, 50, 0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .table-glass {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 6px;
+            min-width: 900px;
+        }
+
+            .table-glass th {
+                padding: 15px;
+                color: #00ff88;
+                font-weight: 500;
+                text-transform: uppercase;
+                font-size: 0.85rem;
+                border: none;
+                text-align: center;
+            }
+
+                .table-glass th.text-left {
+                    text-align: left;
+                }
+
+            .table-glass tbody tr {
+                background: rgba(40, 50, 60, 0.6);
+            }
+
+            .table-glass td {
+                padding: 12px 15px;
+                border-top: 1px solid rgba(0,0,0,0.2);
+                border-bottom: 1px solid rgba(0,0,0,0.2);
+                vertical-align: middle;
+            }
+
+                .table-glass td:first-child {
+                    border-radius: 10px 0 0 10px;
+                    border-left: 1px solid rgba(0,0,0,0.2);
+                }
+
+                .table-glass td:last-child {
+                    border-radius: 0 10px 10px 0;
+                    border-right: 1px solid rgba(0,0,0,0.2);
+                }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+        }
+
+        /* Status Badges */
+        .slot-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 85px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            gap: 6px;
+        }
+
+        .st-checked {
+            background: rgba(40, 167, 69, 0.15);
+            border: 1px solid rgba(40, 167, 69, 0.5);
+            color: #2ecc71;
+        }
+
+        .st-delay {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            color: #ffc107;
+        }
+
+        .st-missed {
+            background: rgba(220, 53, 69, 0.15);
+            border: 1px solid rgba(220, 53, 69, 0.5);
+            color: #ff6b6b;
+        }
+
+        .st-waiting {
+            background: rgba(255, 193, 7, 0.05);
+            border: 1px dashed rgba(255, 193, 7, 0.5);
+            color: #ffc107;
+            animation: blink 2s infinite;
+        }
+
+        .st-not-req {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.3);
+            cursor: not-allowed;
+        }
+
+        @@keyframes blink {
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .btn-outline-info {
+            color: #17a2b8;
+            border-color: #17a2b8;
+        }
+
+            .btn-outline-info:hover {
+                color: #fff;
+                background-color: #17a2b8;
+                border-color: #17a2b8;
+            }
+
+        /* Forms */
+        .form-control {
+            background: rgba(0,0,0,0.3) !important;
+            color: #fff !important;
+            border: 1px solid #444;
+            border-radius: 20px;
+        }
+
+        .date-picker-custom {
+            cursor: pointer !important;
+            text-align: center !important;
+            color: #00ff88 !important;
+            font-weight: bold !important;
+        }
+
+        /* 🌟 NEW: Success Overlay Notification 🌟 */
+        .success-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 10500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+            .success-overlay.active {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+        .success-box {
+            padding: 40px 60px;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(20, 30, 40, 0.95), rgba(10, 15, 20, 0.95));
+            border: 2px solid #00ff88;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 255, 136, 0.3);
+            transform: scale(0.8) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .success-overlay.active .success-box {
+            transform: scale(1) translateY(0);
+        }
+
+        /* 🌟 NEW: Modern Device Status Panel 🌟 */
+        .my-device-panel {
+            background: rgba(16, 25, 32, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: default;
+        }
+
+            .my-device-panel:hover {
+                transform: translateY(-2px);
+                background: rgba(20, 30, 40, 0.85);
+                border-color: rgba(255, 255, 255, 0.2);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            }
+
+            .my-device-panel::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 4px;
+                background: #444;
+                transition: background 0.4s ease;
+            }
+
+            .my-device-panel.panel-ok::before {
+                background: #00ff88;
+                box-shadow: 0 0 10px #00ff88;
+            }
+
+            .my-device-panel.panel-delay::before {
+                background: #ffc107;
+                box-shadow: 0 0 10px #ffc107;
+            }
+
+            .my-device-panel.panel-wait::before {
+                background: #17a2b8;
+                box-shadow: 0 0 10px #17a2b8;
+            }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px currentColor;
+        }
+
+            .status-dot.ok {
+                background-color: #00ff88;
+                color: #00ff88;
+                animation: pulse-green 2s infinite;
+            }
+
+            .status-dot.delay {
+                background-color: #ffc107;
+                color: #ffc107;
+                animation: pulse-yellow 2s infinite;
+            }
+
+            .status-dot.wait {
+                background-color: #17a2b8;
+                color: #17a2b8;
+                animation: pulse-blue 2s infinite;
+            }
+
+        @@keyframes pulse-green {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.6);
+            }
+
+            70% {
+                box-shadow: 0 0 0 8px rgba(0, 255, 136, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 255, 136, 0);
+            }
+        }
+
+        @@keyframes pulse-yellow {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.6);
+            }
+
+            70% {
+                box-shadow: 0 0 0 8px rgba(255, 193, 7, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+            }
+        }
+
+        @@keyframes pulse-blue {
+            0% {
+                box-shadow: 0 0 0 0 rgba(23, 162, 184, 0.6);
+            }
+
+            70% {
+                box-shadow: 0 0 0 8px rgba(23, 162, 184, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(23, 162, 184, 0);
+            }
+        }
+
+        /* 🌟 SKELETON LOADING CSS 🌟 */
+        .skeleton-box {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite ease-in-out;
+            border-radius: 8px;
+        }
+
+        @@keyframes skeleton-loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .skeleton-text {
+            height: 15px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+
+        .skeleton-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .skeleton-card {
+            padding: 20px;
+            background: rgba(30, 40, 50, 0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            height: 100%;
+        }
+
+        /* 🌟 CSS สำหรับ Modal แบบหลายสเต็ป 🌟 */
+        .prefix-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .prefix-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            font-size: 1.4rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+            .prefix-btn:hover {
+                border-color: rgba(0, 255, 136, 0.5);
+                transform: translateY(-2px);
+            }
+
+            .prefix-btn.active {
+                border-color: #00ff88;
+                background: rgba(0, 255, 136, 0.15);
+                color: #00ff88;
+                box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+                transform: scale(1.05);
+                z-index: 2;
+            }
+
+        .prefix2-btn {
+            width: auto;
+            padding: 0 15px;
+            font-size: 1rem;
+        }
+
+        .modern-input-wrapper {
+            position: relative;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            transition: 0.3s;
+            cursor: text;
+            margin-bottom: 10px;
+        }
+
+            .modern-input-wrapper.focused {
+                border-color: #00ff88;
+                box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+                background: rgba(0,0,0,0.6);
+            }
+
+        .modern-input-prefix {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00ff88;
+            margin-right: 8px;
+            transition: 0.3s;
+            user-select: none;
+        }
+
+        .modern-input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 1.6rem;
+            font-weight: bold;
+            width: 100%;
+            outline: none;
+            letter-spacing: 4px;
+            text-align: center;
+        }
+
+            .modern-input::placeholder {
+                color: rgba(255,255,255,0.15);
+                font-weight: normal;
+                letter-spacing: 2px;
+            }
+
+        .live-preview-box {
+            padding: 10px;
+            border-radius: 12px;
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px dashed rgba(0, 255, 136, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+    </style>
+}
+
+<div class="container-fluid py-3">
+    <div class="d-flex header-container justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0 font-weight-bold"><i class="fa fa-pie-chart text-success mr-2"></i>Tablet Check-IN : Monitor Center</h2>
+            <small class="text-muted" id="lastUpdateText">Last update: -</small>
+        </div>
+
+        <div id="currentDeviceStatusBadge" class="d-none my-device-panel panel-wait">
+            <div class="d-flex flex-column text-left pl-2">
+                <span id="myDeviceLabel" class="text-white-50" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px;">Current Device</span>
+                <span id="myDeviceAsset" class="text-white font-weight-bold" style="font-size: 1rem; letter-spacing: 0.5px;">-</span>
+            </div>
+            <div class="border-left border-secondary" style="height: 25px; opacity: 0.5; margin: 0 5px;"></div>
+            <div id="myStatusDisplay" class="d-flex align-items-center pr-2"></div>
+        </div>
+    </div>
+
+    <div id="holidayAlert" class="alert d-none mb-3 align-items-center" style="background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 8px; color: #ffc107;">
+        <i class="fa fa-calendar-check-o fa-2x mr-3"></i>
+        <div>
+            <h6 class="mb-0 font-weight-bold" id="holidayNameText">Holiday</h6>
+            <small style="color: rgba(255,255,255,0.6);">วันนี้เป็นวันหยุด ระบบจะไม่นำมาคำนวณเป็นยอด Miss (หากมีการ Check-In จะแสดงตามปกติ)</small>
+        </div>
+    </div>
+
+    <div id="summaryArea"></div>
+
+    <div class="glass-panel py-3 mb-3">
+        <div class="row align-items-end">
+            <div class="col-12 col-md-3 mb-2 mb-md-0">
+                <label class="text-muted small mb-1 ml-2"><i class="fa fa-calendar mr-1"></i>Date</label>
+                <input type="text" id="filter_date" class="form-control form-control-sm">
+            </div>
+            <div class="col-12 col-md-4 mb-2 mb-md-0">
+                <label class="text-muted small mb-1 ml-2"><i class="fa fa-building-o mr-1"></i>Department</label>
+
+                <div class="dropdown">
+                    <a href="#" class="dropdown-toggle-custom" id="deptDropdownBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span id="deptSelectedText" class="text-truncate">Loading...</span>
+                        <i class="fa fa-chevron-down small text-muted"></i>
+                    </a>
+                    <div class="dropdown-menu dept-dropdown-menu" aria-labelledby="deptDropdownBtn" id="deptListContainer">
+                        <div class="text-center text-muted small py-2"><i class="fa fa-circle-notch fa-spin mr-1"></i> Loading...</div>
+                    </div>
+                </div>
+                <input type="hidden" id="filter_dept" value="">
+
+            </div>
+            <div class="col-12 col-md-5 mb-2 mb-md-0">
+                <label class="text-muted small mb-1 ml-2"><i class="fa fa-search mr-1"></i>Search (Auto update in 5s)</label>
+                <input type="text" id="search_asset" class="form-control form-control-sm pl-3" placeholder="Device Name, Asset, Owner...">
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-start justify-content-md-end align-items-center mb-2 px-3 flex-wrap" style="gap: 8px;">
+        <span class="text-white-50 small mr-2"><i class="fa fa-info-circle mr-1"></i> Status Legend:</span>
+        <span class="slot-box st-checked" style="min-width: 70px;"><i class="fa fa-check-circle"></i> OK</span>
+        <span class="slot-box st-delay" style="min-width: 70px;"><i class="fa fa-exclamation-circle"></i> Delay</span>
+        <span class="slot-box st-missed" style="min-width: 70px;"><i class="fa fa-times-circle"></i> Miss</span>
+        <span class="slot-box st-waiting" style="min-width: 70px;"><i class="fa fa-clock-o"></i> Wait</span>
+        <span class="slot-box st-not-req" style="min-width: 70px;"><i class="fa fa-minus"></i> N/A</span>
+    </div>
+
+    <div class="table-container mb-4">
+        <div class="table-responsive">
+            <table class="table-glass">
+                <thead>
+                    <tr>
+                        <th width="30%" class="text-left pl-4">Device Name / Asset</th>
+                        <th width="30%">Owner / Dept</th>
+                        <th id="slotHeader">Slots</th>
+                        <th width="10%">Log</th>
+                    </tr>
+                </thead>
+                <tbody id="monitorBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="sidebarBackdrop" class="sidebar-backdrop" onclick="closeHistory()"></div>
+<div id="historySidebar" class="history-sidebar"></div>
+
+<div class="modal fade" id="forceCheckinModal" tabindex="-1" role="dialog" aria-labelledby="forceCheckinModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content glass-panel" style="background: rgba(16, 25, 32, 0.95); border: 1px solid #00ff88; box-shadow: 0 0 30px rgba(0, 255, 136, 0.2);">
+            <div class="modal-header border-bottom border-secondary">
+                <h5 class="modal-title text-success font-weight-bold" id="forceCheckinModalLabel">
+                    <i class="fa fa-exclamation-triangle mr-2"></i> Required Check-In
+                </h5>
+            </div>
+            <div class="modal-body text-center py-5">
+                <div class="mb-4">
+                    <i class="fa fa-tablet text-white-50" style="font-size: 4rem;"></i>
+                </div>
+                <h4 class="text-white mb-3 font-weight-bold">กรุณา Check-In อุปกรณ์!</h4>
+                <p class="text-white-50 small mb-4">ระบบพบว่าอุปกรณ์ <strong class="text-info" id="lblModalDeviceName"></strong> ของคุณ<br />ยังไม่ได้ Check-In ในรอบเวลานี้</p>
+
+                <button type="button" class="btn btn-neon btn-lg rounded-pill px-5" id="btnConfirmCheckin">
+                    <i class="fa fa-check-circle mr-2"></i> Check-In Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="registerDeviceModal" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content glass-panel" style="background: rgba(16, 25, 32, 0.95); border: 1px solid @(canSetupDevice ? "#00ff88" : "#f39c12"); box-shadow: 0 0 40px @(canSetupDevice ? "rgba(0, 255, 136, 0.2)" : "rgba(243, 156, 18, 0.2)"); overflow: hidden;">
+            <div class="modal-body p-0">
+                <div class="row no-gutters">
+
+                    <div class="col-md-5 p-4 p-md-5 d-flex flex-column justify-content-center" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.4) 100%); border-right: 1px solid rgba(255,255,255,0.05);">
+                        <div class="text-center mb-4">
+                            <i class="fa fa-shield @(canSetupDevice ? "text-success" : "text-warning")" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h4 class="@(canSetupDevice ? "text-success" : "text-warning") font-weight-bold mb-3 text-center" style="letter-spacing: 0.5px;">ระบบความปลอดภัย</h4>
+                        <p class="text-white-50" style="font-size: 0.85rem; line-height: 1.6; text-align: justify;">
+                            อุปกรณ์นี้สูญเสียการจดจำจากระบบ หรือยังไม่เคยถูกลงทะเบียนเข้าสู่เครือข่าย
+                        </p>
+                        <p class="text-white-50" style="font-size: 0.85rem; line-height: 1.6; text-align: justify;">
+                            เพื่อป้องกันการปลอมแปลงเครื่อง ระบบจึงต้องให้เจ้าหน้าที่ (Admin/Staff) ทำการเข้าสู่ระบบก่อน จึงจะสามารถกำหนดชื่อเครื่องและออก Token ความปลอดภัยได้
+                        </p>
+                    </div>
+
+                    <div class="col-md-7 p-4 p-md-4 d-flex flex-column justify-content-center position-relative">
+                        <div style="position: absolute; top: -10px; right: -10px; font-size: 8rem; color: rgba(255,255,255,0.02); z-index: 0; pointer-events: none;"><i class="fa fa-microchip"></i></div>
+
+                        <div style="z-index: 1;">
+                            @if (canSetupDevice)
+                            {
+                                <h3 class="text-white font-weight-bold mb-3 text-center" style="letter-spacing: 1px;">DEVICE SETUP</h3>
+
+                                <div class="text-white-50 text-center small mb-2" style="font-size: 0.75rem;">1. เลือกตัวอักษรนำหน้า</div>
+                                <div class="prefix-group" id="group1">
+                                    <div class="prefix-btn active" onclick="selectPrefix1('S')">S</div>
+                                    <div class="prefix-btn" onclick="selectPrefix1('T')">T</div>
+                                    <div class="prefix-btn" onclick="selectPrefix1('J')">J</div>
+                                    <div class="prefix-btn" onclick="selectPrefix1('C')">C</div>
+                                </div>
+
+                                <div class="text-white-50 text-center small mb-2" style="font-size: 0.75rem;">2. เลือกประเภท (หลังขีด)</div>
+                                <div class="prefix-group" id="group2">
+                                    <div class="prefix-btn prefix2-btn active" onclick="selectPrefix2('PCT')">PCT</div>
+                                    <div class="prefix-btn prefix2-btn" onclick="selectPrefix2('PCD')">PCD</div>
+                                    <div class="prefix-btn prefix2-btn" onclick="selectPrefix2('PCS')">PCS</div>
+                                    <div class="prefix-btn prefix2-btn" onclick="selectPrefix2('PCN')">PCN</div>
+                                </div>
+
+                                <div class="text-white-50 text-center small mb-2" style="font-size: 0.75rem;">3. ระบุหมายเลข 6 หลัก</div>
+                                <div class="modern-input-wrapper" id="inputWrapper" onclick="document.getElementById('txtRegisterDeviceName').focus()">
+                                    <span class="modern-input-prefix" id="lblInputPrefix">S-PCT</span>
+                                    <input type="text" id="txtRegisterDeviceName" class="modern-input" placeholder="123456" autocomplete="off" maxlength="6" inputmode="numeric">
+                                </div>
+
+                                <div class="live-preview-box" id="previewContainer" style="opacity: 0.4;">
+                                    <span id="lblLivePreview" class="text-white font-weight-bold" style="font-size: 1.4rem; letter-spacing: 2px;">S-PCT...</span>
+                                </div>
+
+                                <button type="button" class="btn btn-neon btn-block rounded-pill py-2 font-weight-bold mt-3" style="font-size: 1.1rem; letter-spacing: 1px;" onclick="saveDeviceName()">
+                                    <i class="fa fa-link mr-2"></i> CONNECT
+                                </button>
+                            }
+                            else
+                            {
+                                <div class="text-center mb-3 mt-2">
+                                    <i class="fa fa-lock text-warning" style="font-size: 4rem; text-shadow: 0 0 20px rgba(255,193,7,0.5);"></i>
+                                </div>
+                                <h3 class="text-warning font-weight-bold mb-2 text-center" style="letter-spacing: 1px;">ACCESS RESTRICTED</h3>
+                                <p class="text-white-50 text-center small mb-5">คุณไม่มีสิทธิ์ในการตั้งค่าอุปกรณ์นี้<br />กรุณาเข้าสู่ระบบด้วยบัญชี Admin/Staff</p>
+
+                                <a href="@Url.Action("Index", "Auth")" class="btn btn-warning-neon btn-block rounded-pill py-3 font-weight-bold" style="font-size: 1.1rem; letter-spacing: 1px;">
+                                    <i class="fa fa-sign-in mr-2"></i> ไปหน้า Login
+                                </a>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="checkinSuccessOverlay" class="success-overlay">
+    <div class="success-box" id="successBoxBorder">
+        <i id="successIcon" class="fa fa-check-circle text-success" style="font-size: 5rem; margin-bottom: 15px;"></i>
+        <h3 class="text-white font-weight-bold mb-3">Check-In Completed!</h3>
+        <div style="font-size: 1.1rem; color: rgba(255,255,255,0.7);">
+            สถานะของคุณคือ: <span id="successStatusBadge" class="slot-box st-checked ml-2" style="font-size: 1rem; padding: 6px 15px;"><i class="fa fa-check-circle"></i> OK</span>
+        </div>
+        <div class="mt-4 text-white-50 small">
+            หน้าต่างจะปิดอัตโนมัติใน <span id="successCountdown">4</span> วินาที...
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/Scripts/tablet/flatpickr.js"></script>
+
+    <script>
+        const slotsConfig = [
+            { name: "08:00-12:00", start: 8, end: 12, nextStart: 20 },
+            { name: "20:00-00:00", start: 20, end: 24, nextStart: 8 }
+        ];
+
+        let typingTimer;
+        const doneTypingInterval = 5000;
+
+        let myDeviceName = localStorage.getItem('tablet_host_name');
+        let activeDisplayDeviceName = '';
+
+        let currentPrefix1 = 'S';
+        let currentPrefix2 = 'PCT';
+
+        $(document).ready(function () {
+            // 🌟 1. ดึงเวลา Server (บังคับเป็น UTC+7 ไทย) มาแปะให้ JS อัตโนมัติด้วย Razor
+            // ใช้รูปแบบ ISO (yyyy-MM-ddTHH:mm:ss) เพื่อให้ JS แปลงค่าได้ถูกต้อง 100%
+            let serverTimeStr = '@DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-ddTHH:mm:ss")';
+    
+            // 🌟 2. สร้าง Date Object จากเวลา Server ที่ได้มา (ตอนนี้ JS จะยึดเวลา Server แล้ว)
+            let dt = new Date(serverTimeStr);
+
+            // 🌟 3. เช็คกะดึก (ถ้าเวลายังไม่ถึง 8:00 น. ให้ถอยวันที่ไป 1 วัน)
+            if (dt.getHours() < 8) {
+                dt.setDate(dt.getDate() - 1);
+            }
+
+            showSkeletonLoader();
+
+            // 🌟 เช็คว่ามีการตั้งค่าใน Local Storage หรือไม่
+            if (!myDeviceName) {
+                console.log("Device Name Unknown. Waiting for manual setup.");
+                activeDisplayDeviceName = '';
+                // อัปเดต UI มุมขวาบนทันที
+                updateMyDeviceStatus(null, [], null, null);
+            } else {
+                activeDisplayDeviceName = myDeviceName;
+                checkCurrentDeviceStatus();
+            }
+
+            // จัดการ Effect ช่องกรอกข้อมูล
+            $('#txtRegisterDeviceName').on('focus', function() {
+                $('#inputWrapper').addClass('focused');
+            }).on('blur', function() {
+                $('#inputWrapper').removeClass('focused');
+            }).on('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                updateLivePreview();
+            });
+
+            $('#btnConfirmCheckin').on('click', function() {
+                performForceCheckIn();
+            });
+
+            flatpickr("#filter_date", {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d-m-Y",
+                altInputClass: "form-control form-control-sm date-picker-custom",
+                defaultDate: dt,
+                disableMobile: true,
+                onChange: function () { triggerSearch(); }
+            });
+
+            let headerHtml = '';
+            slotsConfig.forEach(s => headerHtml += `<th width="20%">${s.name}</th>`);
+            $('#slotHeader').replaceWith(headerHtml);
+
+            $('#search_asset').on('keyup', function () {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(triggerSearch, doneTypingInterval);
+            });
+            $('#search_asset').on('keydown', function () { clearTimeout(typingTimer); });
+
+            $(document).on('click', '.dept-dropdown-menu', function (e) { e.stopPropagation(); });
+
+            loadDepartments();
+        });
+
+        function selectPrefix1(prefix) {
+            currentPrefix1 = prefix;
+            $('#group1 .prefix-btn').removeClass('active');
+            $(`#group1 .prefix-btn:contains('${prefix}')`).addClass('active');
+            updatePrefixLabel();
+        }
+
+        function selectPrefix2(prefix) {
+            currentPrefix2 = prefix;
+            $('#group2 .prefix-btn').removeClass('active');
+            $(`#group2 .prefix-btn:contains('${prefix}')`).addClass('active');
+            updatePrefixLabel();
+        }
+
+        function updatePrefixLabel() {
+            $('#lblInputPrefix').text(currentPrefix1 + '-' + currentPrefix2);
+            $('#txtRegisterDeviceName').focus();
+            updateLivePreview();
+        }
+
+        function updateLivePreview() {
+            let val = $('#txtRegisterDeviceName').val().trim();
+            let finalStr = currentPrefix1 + '-' + currentPrefix2 + (val || '...');
+            $('#lblLivePreview').text(finalStr);
+
+            if(val.length === 6) {
+                $('#lblLivePreview').css('color', '#00ff88');
+                $('#previewContainer').css('opacity', '1').css('border-color', '#00ff88');
+            } else {
+                $('#lblLivePreview').css('color', '#fff');
+                $('#previewContainer').css('opacity', '0.4').css('border-color', 'rgba(0, 255, 136, 0.3)');
+            }
+        }
+
+        function saveDeviceName() {
+            let inputName = $('#txtRegisterDeviceName').val().trim();
+
+            if (inputName.length !== 6) {
+                alert('กรุณาระบุตัวเลขให้ครบ 6 หลักเป๊ะๆ');
+                $('#txtRegisterDeviceName').focus();
+                return;
+            }
+
+            let fullDeviceName = currentPrefix1 + '-' + currentPrefix2 + inputName;
+
+            if(confirm(`ยืนยันการตั้งค่าอุปกรณ์เป็น: ${fullDeviceName} ใช่หรือไม่?\n(เมื่อบันทึกแล้ว จะปลอดภัยจากการดัดแปลงข้อมูล)`)) {
+                localStorage.setItem('tablet_host_name', fullDeviceName);
+                $('#registerDeviceModal').modal('hide');
+                window.location.reload();
+            }
+        }
+
+        function resetDeviceName() {
+            if (confirm("คุณต้องการล้างข้อมูลชื่อเครื่อง และตั้งค่าใหม่ใช่หรือไม่?")) {
+                localStorage.removeItem('tablet_host_name');
+                window.location.reload();
+            }
+        }
+
+        function checkCurrentDeviceStatus() {
+            if (!activeDisplayDeviceName) return;
+
+            fetch(`@Url.Action("CheckHostStatus", "Monitor")?hostName=${encodeURIComponent(activeDisplayDeviceName)}`)
+                .then(r => r.json())
+                .then(res => {
+                    if (!res.isCheckedIn) {
+                        $('#lblModalDeviceName').text(activeDisplayDeviceName);
+                        $('#forceCheckinModal').modal({ backdrop: 'static', keyboard: false });
+                    }
+                })
+                .catch(err => console.error("Error checking Device status:", err));
+        }
+
+        function performForceCheckIn() {
+            if (!activeDisplayDeviceName) return;
+
+            const btn = $('#btnConfirmCheckin');
+            const originalText = btn.html();
+
+            btn.html('<i class="fa fa-spinner fa-spin mr-2"></i> Checking in...').prop('disabled', true);
+
+            fetch(`@Url.Action("SubmitCheckIn", "Monitor")?hostName=${encodeURIComponent(activeDisplayDeviceName)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    $('#forceCheckinModal').modal('hide');
+                    showSuccessOverlay(res.status);
+                    setTimeout(() => { triggerSearch(); }, 500);
+                } else {
+                    alert("แจ้งเตือนจากระบบ: " + (res.message || 'Check-in failed!'));
+                    btn.html(originalText).prop('disabled', false);
+                }
+            })
+            .catch(err => {
+                alert("เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์");
+                btn.html(originalText).prop('disabled', false);
+            });
+        }
+
+        function showSkeletonLoader() {
+            const summarySkeleton = `<div class="text-center py-5"><i class="fa fa-spinner fa-spin fa-2x text-muted"></i></div>`;
+            $('#summaryArea').html(summarySkeleton);
+            $('#monitorBody').html(`<tr><td colspan="4" class="text-center py-4"><i class="fa fa-spinner fa-spin text-muted"></i></td></tr>`);
+        }
+
+        function triggerSearch() { showSkeletonLoader(); loadMonitorData(); }
+
+        function loadDepartments() {
+            fetch('@Url.Action("GetDepartments", "Monitor")')
+                .then(r => r.json())
+                .then(data => {
+                    let userSessionDept = '@(Session["Department"]?.ToString() ?? "")';
+                    let userRole = '@(Session["UserRole"]?.ToString() ?? "")';
+                    let mainDept = userSessionDept ? userSessionDept.split(',')[0].trim() : '';
+                    let filterToUser = (mainDept !== '' && userRole !== 'Admin');
+
+                    let html = `<div class="dept-checkbox-item" onclick="toggleDeptAll(event)"><input type="checkbox" id="chk_all_depts" ${filterToUser ? '' : 'checked'}><label class="mb-0 w-100 cursor-pointer" for="chk_all_depts" style="pointer-events:none;">Select All</label></div><div class="dropdown-divider border-secondary my-1"></div>`;
+
+                    if (data && Array.isArray(data)) {
+                        data.forEach((dept, index) => {
+                            if (dept) {
+                                let isChecked = filterToUser ? (dept === mainDept ? 'checked' : '') : 'checked';
+                                html += `<div class="dept-checkbox-item" onclick="toggleItem(event, 'dept_chk_${index}')"><input type="checkbox" class="dept-chk" value="${dept}" id="dept_chk_${index}" ${isChecked}><label class="mb-0 w-100 cursor-pointer" for="dept_chk_${index}" style="pointer-events:none;">${dept}</label></div>`;
+                            }
+                        });
+                    }
+                    $('#deptListContainer').html(html);
+                    updateDeptSelection();
+                });
+        }
+
+        function toggleDeptAll(e) { if (e && e.target.type !== 'checkbox') { let chk = document.getElementById('chk_all_depts'); chk.checked = !chk.checked; } setTimeout(() => { let isChecked = $('#chk_all_depts').is(':checked'); $('.dept-chk').prop('checked', isChecked); updateDeptSelection(); }, 10); }
+        function toggleItem(e, id) { if (e && e.target.type !== 'checkbox') { let chk = document.getElementById(id); chk.checked = !chk.checked; } updateDeptSelection(); }
+
+        function updateDeptSelection() {
+            setTimeout(() => {
+                let selected = [];
+                $('.dept-chk:checked').each(function () { selected.push($(this).val()); });
+                $('#filter_dept').val(selected.join(','));
+                let total = $('.dept-chk').length; let count = selected.length; let text = "All Departments";
+                if (count === 0) { $('#filter_dept').val(''); $('#chk_all_depts').prop('checked', false); $('#deptDropdownBtn').css('border-color', 'rgba(255,255,255,0.15)').css('color', '#fff'); }
+                else if (count === total) { $('#chk_all_depts').prop('checked', true); $('#deptDropdownBtn').css('border-color', 'rgba(255,255,255,0.15)').css('color', '#fff'); }
+                else { $('#chk_all_depts').prop('checked', false); text = count === 1 ? selected[0] : `${count} Selected`; $('#deptDropdownBtn').css('border-color', '#00ff88').css('color', '#00ff88'); }
+                $('#deptSelectedText').text(text);
+                triggerSearch();
+            }, 10);
+        }
+
+        function filterByDept(deptName) {
+            $('.dept-chk').prop('checked', false);
+            $('.dept-chk').each(function() { if($(this).val() === deptName) $(this).prop('checked', true); });
+            updateDeptSelection();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function loadMonitorData() {
+            const date = $('#filter_date').val();
+            const search = $('#search_asset').val();
+            const dept = $('#filter_dept').val() || '';
+
+            const url = `@Url.Action("GetMonitorData", "Monitor")?date=${date}&search=${search}&dept=${encodeURIComponent(dept)}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.isHoliday) {
+                        $('#holidayNameText').text(data.holidayName || 'Holiday');
+                        $('#holidayAlert').removeClass('d-none').addClass('d-flex');
+                    } else {
+                        $('#holidayAlert').addClass('d-none').removeClass('d-flex');
+                    }
+
+                    renderSummaryUI(data.summary, dept);
+                    renderTable(data.list, data.logs, data.server_hour, date, data.isHoliday);
+                    $('#lastUpdateText').text("Last update: " + new Date().toLocaleTimeString());
+
+                    let myDeviceInfo = null;
+                    if (activeDisplayDeviceName && data.list) {
+                        myDeviceInfo = data.list.find(d =>
+                            (d.asset_no && d.asset_no.toUpperCase() === activeDisplayDeviceName.toUpperCase()) ||
+                            (d.host_name && d.host_name.toUpperCase() === activeDisplayDeviceName.toUpperCase())
+                        );
+                    }
+
+                    updateMyDeviceStatus(myDeviceInfo, data.logs, data.currentSlot, activeDisplayDeviceName);
+                });
+        }
+
+        function renderSummaryUI(sum, currentDeptStr) {
+            if (!sum) { $('#summaryArea').empty(); return; }
+            const deptEntries = Object.entries(sum.dept_breakdown || {}).sort((a,b) => b[1] - a[1]);
+            let currentDeptsArray = currentDeptStr ? currentDeptStr.split(',') : [];
+
+            let deptHtml = deptEntries.map(([name, count]) => {
+                let isActive = currentDeptsArray.includes(name) ? 'border-color:#00ff88; background:rgba(0,255,136,0.1);' : '';
+                return `<div class="dept-row" style="${isActive}" onclick="filterByDept('${name}')" title="Click to filter"><span class="text-white-50 small text-truncate" style="max-width:150px;">${name}</span><span class="dept-val">${count}</span></div>`;
+            }).join('');
+
+            const chartYesterday = createDonutChart("Yesterday", sum.yest_ok, sum.yest_delay, sum.yest_miss);
+            const chartDay = createDonutChart("Morning (08:00 - 12:00)", sum.morn_ok, sum.morn_delay, sum.morn_miss, sum.morn_expected);
+            const chartNight = createDonutChart("Night (20:00 - 00:00)", sum.night_ok, sum.night_delay, sum.night_miss, sum.night_expected);
+
+            const html = `
+            <div class="row">
+                <div class="col-12 col-lg-5 mb-3">
+                    <div class="glass-panel summary-card h-100" style="padding: 20px; background: linear-gradient(135deg, rgba(18,25,35,0.95) 0%, rgba(10,20,30,0.98) 100%); border-left: 4px solid #00ff88;">
+                        <div class="text-white-50 font-weight-bold mb-1" style="font-size: 0.85rem; letter-spacing: 1px;"><i class="fa fa-cubes text-success mr-2"></i>TOTAL TARGET DEVICES</div>
+                        <div class="text-white font-weight-bold mb-3 mt-3 text-center summary-big">${sum.total_devices}</div>
+                        <div class="text-center text-muted small mt-auto">Total devices required to check-in</div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-7 mb-3">
+                    <div class="glass-panel summary-card h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-2 border-bottom border-secondary pb-2">
+                            <div class="summary-title mb-0"><i class="fa fa-list"></i> Click to isolate Department</div>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="toggleDeptAll()" style="font-size:0.7rem;">Select All</button>
+                        </div>
+                        <div class="dept-list-container custom-scroll h-100"><div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">${deptHtml}</div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row"><div class="col-12 col-md-4 mb-3">${chartYesterday}</div><div class="col-12 col-md-4 mb-3">${chartDay}</div><div class="col-12 col-md-4 mb-3">${chartNight}</div></div>`;
+            $('#summaryArea').html(html);
+        }
+
+        function createDonutChart(title, ok, delay, miss, expected = 0) {
+            let actualCount = ok + delay + miss;
+            let total = expected > 0 ? expected : actualCount;
+            if (total === 0) total = 1;
+
+            const okPct = (ok / total) * 100, delayPct = (delay / total) * 100, missPct = (miss / total) * 100;
+            const d1 = okPct, d2 = okPct + delayPct, d3 = okPct + delayPct + missPct;
+            let gradient = `conic-gradient(rgba(255,255,255,0.1) 0% 100%)`;
+            let completedPct = 0;
+
+            if (ok + delay + miss > 0) {
+                gradient = `conic-gradient(#00e676 0% ${d1}%, #ffc107 ${d1}% ${d2}%, #ff5252 ${d2}% ${d3}%, rgba(255,255,255,0.05) ${d3}% 100%)`;
+                completedPct = Math.round(((ok + delay) / total) * 100);
+            }
+
+            let missDisplay = (miss === 0 && (ok + delay < expected)) ? `<span class="text-muted">Waiting</span>` : miss;
+            return `<div class="glass-panel summary-card"><div class="summary-title text-center mb-3" style="border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">${title}</div><div class="donut-wrapper"><div class="donut-chart" style="background: ${gradient};"><div class="donut-hole"><div class="donut-pct-text">${completedPct}%</div><div class="donut-label">Comp.</div></div></div><div class="chart-legend"><div class="legend-item"><span class="text-white-50">OK</span> <span><span class="legend-dot c-ok"></span> ${ok}</span></div><div class="legend-item"><span class="text-white-50">Delay</span> <span><span class="legend-dot c-delay"></span> ${delay}</span></div><div class="legend-item"><span class="text-white-50">Missed</span> <span><span class="legend-dot c-miss"></span> ${missDisplay}</span></div><div class="legend-item border-0"><small>Target</small> <strong>${expected}</strong></div></div></div></div>`;
+        }
+
+        function renderTable(list, logs, serverHour, filterDateStr, isHoliday) {
+            if (!list || list.length === 0) { $('#monitorBody').html('<tr><td colspan="4" class="text-center py-4 text-muted">No Data Found</td></tr>'); return; }
+            const logMap = new Map();
+            logs.forEach(l => logMap.set(`${l.asset_no}||${l.checkin_shift}`, l));
+
+            let html = '';
+            list.forEach(row => {
+                let slotsHtml = '';
+                slotsConfig.forEach(slot => {
+                    let isTarget = false;
+                    if (slot.name.includes("08:00")) isTarget = row.check_morn;
+                    else if (slot.name.includes("20:00")) isTarget = row.check_night;
+
+                    if (!isTarget) { slotsHtml += `<td class="text-center"><span class="slot-box st-not-req"><i class="fa fa-minus"></i> N/A</span></td>`; return; }
+
+                    const log = logMap.get(`${row.asset_no}||${slot.name}`);
+                    let stHtml = '';
+
+                    if (log) {
+                        let timeStr = log.check_ts ? log.check_ts.split(' ')[1].substring(0, 5) : '';
+                        stHtml = log.status === 'Delay' ? `<span class="slot-box st-delay"><i class="fa fa-exclamation-circle"></i> ${timeStr}</span>` : `<span class="slot-box st-checked"><i class="fa fa-check-circle"></i> ${timeStr}</span>`;
+                    } else {
+                        if (isHoliday) {
+                            stHtml = `<span class="slot-box" style="background: rgba(255, 193, 7, 0.1); border: 1px dashed rgba(255, 193, 7, 0.5); color: #ffc107;"><i class="fa fa-star-o"></i> Holiday</span>`;
+                        } else {
+                            let slotEnd = slot.name === "20:00-00:00" ? 24 : slot.end;
+                            let isToday = new Date().toDateString() === new Date(filterDateStr).toDateString();
+
+                            if (isToday) {
+                                if (serverHour >= slot.start && serverHour < slotEnd) stHtml = `<span class="slot-box st-waiting"><i class="fa fa-clock-o"></i> Wait</span>`;
+                                else if (serverHour >= slotEnd) stHtml = `<span class="slot-box st-missed"><i class="fa fa-times-circle"></i> Miss</span>`;
+                                else if (slot.name === "20:00-00:00" && serverHour < 8) stHtml = `<span class="slot-box st-waiting"><i class="fa fa-clock-o"></i> Wait</span>`;
+                                else stHtml = `<span class="slot-box st-not-req" style="border-style: solid;">-</span>`;
+                            } else if (new Date(filterDateStr) < new Date()) {
+                                let isYestNight = (slot.name === "20:00-00:00" && new Date().getDate() === new Date(filterDateStr).getDate() + 1 && serverHour < 8);
+                                stHtml = isYestNight ? `<span class="slot-box st-waiting"><i class="fa fa-clock-o"></i> Wait</span>` : `<span class="slot-box st-missed"><i class="fa fa-times-circle"></i> Miss</span>`;
+                            } else {
+                                stHtml = `<span class="slot-box st-not-req" style="border-style: solid;">-</span>`;
+                            }
+                        }
+                    }
+                    slotsHtml += `<td class="text-center">${stHtml}</td>`;
+                });
+
+                html += `<tr>
+                    <td class="pl-4"><div class="font-weight-bold text-info" style="font-size:1.1rem;">${row.asset_no}</div><div class="text-white-50 small"> ${row.host_name || ''}</div></td>
+                    <td><div class="text-white font-weight-bold">${row.dept_name}</div><div class="text-white-50 small">Owner: ${row.owner_name}</div></td>
+                    ${slotsHtml}
+                    <td class="text-center"><button class="btn btn-sm btn-outline-info rounded-circle shadow-none" onclick="viewHistory('${row.asset_no}')"><i class="fa fa-history"></i></button></td>
+                </tr>`;
+            });
+            $('#monitorBody').html(html);
+        }
+
+        let curHistAsset = ''; let curHistOffset = 0;
+        function viewHistory(asset, append = false) {
+            if (!append) {
+                curHistAsset = asset; curHistOffset = 0;
+                $('#sidebarBackdrop').addClass('active'); $('#historySidebar').addClass('active'); $('body').css('overflow', 'hidden');
+                $('#historySidebar').html(`<div class="hs-header p-3 border-bottom border-secondary d-flex justify-content-between align-items-center"><div class="font-weight-bold">History: <span class="text-success">${asset}</span></div><button class="btn btn-sm btn-outline-light rounded-circle" onclick="closeHistory()"><i class="fa fa-times"></i></button></div><div class="hs-body p-3" style="overflow-y: auto; flex: 1;"><table class="table table-sm table-borderless text-white mb-0 small"><thead><tr class="text-muted border-bottom border-secondary"><th style="font-weight:normal;" width="40%">Time</th><th style="font-weight:normal;" width="60%">Slot / Status</th></tr></thead><tbody id="histTableBody"><tr><td colspan="2" class="text-center py-5 text-muted"><i class="fa fa-spinner fa-spin fa-2x"></i><div class="mt-2">Loading...</div></td></tr></tbody></table><div id="histLoadMoreWrapper" class="text-center pb-4 pt-3"></div></div>`);
+            } else {
+                $('#btnHistLoadMore').html('<i class="fa fa-spinner fa-spin"></i> Loading...').prop('disabled', true);
+            }
+
+            fetch(`@Url.Action("GetHistory", "Monitor")?asset=${encodeURIComponent(curHistAsset)}&offset=${curHistOffset}`).then(r => r.json()).then(data => {
+                let rows = '';
+                if (!data || data.length === 0) { if(!append) rows = `<tr><td colspan="2" class="text-center text-muted py-4">No History Found</td></tr>`; }
+                else { data.forEach(l => { let badge = l.status === 'Delay' ? '<span class="badge badge-warning ml-2" style="font-size:0.7rem">DELAY</span>' : '<span class="badge badge-success ml-2" style="font-size:0.7rem">OK</span>'; rows += `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);"><td class="pl-3 text-white py-3">${l.checkin_time}</td><td class="py-3"><div class="d-flex align-items-center"><span class="badge badge-dark border border-secondary mr-2">${l.checkin_shift}</span>${badge}</div></td></tr>`; }); }
+                if (!append) $('#histTableBody').html(rows); else $('#histTableBody').append(rows);
+                if (data.length === 20) { $('#histLoadMoreWrapper').html(`<button id="btnHistLoadMore" class="btn btn-sm btn-outline-success rounded-pill px-4" onclick="loadMoreHistory()">Load More</button>`); } else { $('#histLoadMoreWrapper').empty(); }
+            });
+        }
+
+        function loadMoreHistory() { curHistOffset += 20; viewHistory(curHistAsset, true); }
+        function closeHistory() { $('#sidebarBackdrop').removeClass('active'); $('#historySidebar').removeClass('active'); $('body').css('overflow', ''); }
+
+        function showSuccessOverlay(status) {
+            const overlay = $('#checkinSuccessOverlay'), badge = $('#successStatusBadge'), icon = $('#successIcon'), box = $('#successBoxBorder');
+            if (status === 'Delay') { badge.removeClass('st-checked').addClass('st-delay').html('<i class="fa fa-exclamation-circle"></i> Delay'); icon.removeClass('fa-check-circle text-success').addClass('fa-exclamation-triangle text-warning'); box.css('border-color', '#ffc107'); box.css('box-shadow', '0 10px 40px rgba(255, 193, 7, 0.3)'); }
+            else { badge.removeClass('st-delay').addClass('st-checked').html('<i class="fa fa-check-circle"></i> OK'); icon.removeClass('fa-exclamation-triangle text-warning').addClass('fa-check-circle text-success'); box.css('border-color', '#00ff88'); box.css('box-shadow', '0 10px 40px rgba(0, 255, 136, 0.3)'); }
+            overlay.addClass('active'); let seconds = 4; $('#successCountdown').text(seconds);
+            let countdownInterval = setInterval(() => { seconds--; $('#successCountdown').text(seconds); if (seconds <= 0) { clearInterval(countdownInterval); overlay.removeClass('active'); $('#btnConfirmCheckin').html('<i class="fa fa-check-circle mr-2"></i> Check-In Now').prop('disabled', false); } }, 1000);
+        }
+
+        function updateMyDeviceStatus(device, logs, currentSlot, currentHostName) {
+            const badgeContainer = $('#currentDeviceStatusBadge');
+            badgeContainer.removeClass('d-none panel-ok panel-delay panel-wait');
+
+            let badgeHtml = '';
+            let editBtn = '';
+
+            // 🌟 เงื่อนไขสร้างปุ่มสำหรับ Admin/Staff เท่านั้น
+            @if (canSetupDevice)
+            {
+                <text>
+                if (!myDeviceName) {
+                    // 🌟 ให้กด Setup แล้ว Modal เด้งขึ้นมาแบบบังคับตั้งค่าให้จบ (ปิดไม่ได้)
+                    editBtn = `<a href="javascript:void(0);" onclick="$('#registerDeviceModal').modal('show')" class="text-warning ml-2 text-decoration-none" title="ตั้งค่าอุปกรณ์" style="font-size: 0.85rem;"><i class="fa fa-cog fa-spin"></i> Setup</a>`;
+                } else {
+                    editBtn = `<a href="javascript:void(0);" onclick="resetDeviceName()" class="text-warning ml-2 text-decoration-none" title="แก้ไข/รีเซ็ตชื่อเครื่อง" style="font-size: 0.85rem;"><i class="fa fa-edit"></i></a>`;
+                }
+                </text>
+            }
+
+            if (!myDeviceName) {
+                $('#myDeviceLabel').text('DEVICE SETUP');
+                $('#myDeviceAsset').html('<span class="text-danger font-weight-bold">Not Configured</span>' + editBtn);
+
+                badgeContainer.addClass('panel-wait');
+                badgeHtml = `<span class="status-dot wait mr-2"></span><div class="d-flex flex-column text-left"><span class="text-warning font-weight-bold" style="font-size: 0.8rem;">ACTION REQUIRED</span><span class="text-white-50" style="font-size: 0.7rem;">Please Setup Device</span></div>`;
+
+            } else if (device && currentSlot) {
+                $('#myDeviceLabel').text('MY DEVICE / ASSET');
+                let finalName = device.asset_no || currentHostName;
+                $('#myDeviceAsset').html(finalName + editBtn);
+
+                const myLog = logs.find(l => l.asset_no === device.asset_no && l.checkin_shift === currentSlot);
+
+                if (myLog) {
+                    let timeStr = myLog.check_ts ? myLog.check_ts.split(' ')[1].substring(0, 5) : '';
+                    if (myLog.status === 'Delay') {
+                        badgeContainer.addClass('panel-delay');
+                        badgeHtml = `<span class="status-dot delay mr-2"></span><div class="d-flex flex-column text-left"><span class="text-warning font-weight-bold" style="font-size: 0.8rem;">DELAY</span><span class="text-white-50" style="font-size: 0.7rem;">${timeStr}</span></div>`;
+                    } else {
+                        badgeContainer.addClass('panel-ok');
+                        badgeHtml = `<span class="status-dot ok mr-2"></span><div class="d-flex flex-column text-left"><span class="text-success font-weight-bold" style="font-size: 0.8rem;">CHECKED IN</span><span class="text-white-50" style="font-size: 0.7rem;">${timeStr}</span></div>`;
+                    }
+                } else {
+                    badgeContainer.addClass('panel-wait');
+                    badgeHtml = `<span class="status-dot wait mr-2"></span><div class="d-flex flex-column text-left"><span class="text-info font-weight-bold" style="font-size: 0.8rem;">WAITING</span><span class="text-white-50" style="font-size: 0.7rem;">Pending...</span></div>`;
+                }
+            } else {
+                let displayHost = currentHostName || "UNKNOWN DEVICE";
+                $('#myDeviceLabel').text('UNREGISTERED');
+                $('#myDeviceAsset').html(displayHost + editBtn);
+
+                badgeContainer.addClass('panel-wait');
+                badgeHtml = `<span class="status-dot mr-2" style="background-color: #6c757d; box-shadow: 0 0 8px #6c757d;"></span><div class="d-flex flex-column text-left"><span class="text-secondary font-weight-bold" style="font-size: 0.8rem;">NO ACCESS</span><span class="text-white-50" style="font-size: 0.7rem;">Not in target list</span></div>`;
+            }
+
+            $('#myStatusDisplay').html(badgeHtml);
+        }
+    </script>
+}

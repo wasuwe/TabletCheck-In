@@ -1,0 +1,1051 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Admin Management";
+}
+
+@section Styles {
+    <style>
+
+        /* UI ELEMENTS */
+        .btn-neon {
+            background: linear-gradient(90deg, #00b09b, #96c93d);
+            border: none;
+            color: white;
+            font-weight: 600;
+            border-radius: 50px;
+            padding: 8px 20px;
+            box-shadow: 0 4px 15px rgba(0, 176, 155, 0.4);
+            transition: 0.3s;
+        }
+
+            .btn-neon:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(0, 176, 155, 0.6);
+                color: white;
+            }
+
+        .btn-outline-light {
+            border-radius: 50px;
+            padding: 8px 20px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff !important;
+            border-radius: 8px;
+            height: 42px;
+            transition: all 0.2s ease;
+        }
+
+        textarea.form-control {
+            height: auto;
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #00ff88;
+            box-shadow: none;
+            outline: none;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255,255,255,0.3);
+        }
+
+        select option {
+            background-color: #1a262b;
+            color: white;
+        }
+
+        /* ปรับสีของ USERNAME ให้โดดเด่น */
+        #u_username, #dev_asset_no {
+            color: #ffd32a !important;
+            font-weight: bold;
+            background: rgba(255, 211, 42, 0.05);
+            border: 1px solid rgba(255, 211, 42, 0.4);
+            letter-spacing: 1px;
+        }
+
+            #u_username:focus, #dev_asset_no:focus {
+                border-color: #ffd32a;
+                box-shadow: 0 0 8px rgba(255, 211, 42, 0.5);
+            }
+
+        /* TABLE */
+        .table-container {
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(30, 40, 50, 0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .table-glass {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 6px;
+            min-width: 800px;
+        }
+
+            .table-glass th {
+                color: #00ff88;
+                padding: 15px;
+                border: none;
+            }
+
+            .table-glass td {
+                padding: 12px 15px;
+                border-top: 1px solid rgba(255,255,255,0.05);
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+            }
+
+            .table-glass tbody tr {
+                background: rgba(40, 50, 60, 0.6);
+            }
+
+        /* CUSTOM TABS */
+        .nav-tabs {
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+            .nav-tabs .nav-link {
+                color: #888;
+                border: none;
+                font-weight: 600;
+                padding: 15px 25px;
+                cursor: pointer;
+                background: transparent;
+                transition: 0.3s;
+            }
+
+                .nav-tabs .nav-link:hover {
+                    color: #fff;
+                }
+
+                .nav-tabs .nav-link.active {
+                    color: #ff9f43 !important;
+                    border-bottom: 3px solid #ff9f43 !important;
+                    background: rgba(255, 159, 67, 0.1) !important;
+                    border-radius: 8px 8px 0 0;
+                }
+
+        /* SIDEBAR */
+        .sidebar-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1040;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+            .sidebar-backdrop.active {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+        .editor-sidebar {
+            position: fixed;
+            top: 0;
+            right: -500px;
+            width: 450px;
+            max-width: 100vw;
+            height: 100vh;
+            background: #101920;
+            z-index: 1050;
+            transition: right 0.4s;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #333;
+        }
+
+            .editor-sidebar.active {
+                right: 0;
+            }
+
+        .editor-header {
+            padding: 20px 25px;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .editor-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* GRID CHECKBOX STYLE */
+        .dept-grid-container {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .dept-grid-toolbar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+            .dept-grid-toolbar a {
+                color: #00b09b;
+                font-size: 0.8rem;
+                cursor: pointer;
+                text-decoration: none;
+                transition: 0.2s;
+            }
+
+                .dept-grid-toolbar a:hover {
+                    color: #00ff88;
+                    text-decoration: underline;
+                }
+
+        .dept-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .dept-grid-item {
+            position: relative;
+        }
+
+            .dept-grid-item input[type="checkbox"] {
+                display: none;
+            }
+
+            .dept-grid-item label {
+                display: flex;
+                align-items: center;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                color: #ccc;
+                padding: 8px 12px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.85rem;
+                margin: 0;
+                transition: all 0.2s ease;
+                user-select: none;
+            }
+
+                .dept-grid-item label:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                    border-color: rgba(255, 255, 255, 0.3);
+                    color: #fff;
+                }
+
+                .dept-grid-item label::before {
+                    content: '\f0c8';
+                    font-family: 'FontAwesome';
+                    margin-right: 8px;
+                    font-size: 1.1rem;
+                    color: rgba(255,255,255,0.3);
+                    transition: 0.2s;
+                }
+
+            .dept-grid-item input[type="checkbox"]:checked + label {
+                background: rgba(0, 255, 136, 0.1);
+                border-color: #00ff88;
+                color: #00ff88;
+                font-weight: bold;
+            }
+
+                .dept-grid-item input[type="checkbox"]:checked + label::before {
+                    content: '\f14a';
+                    color: #00ff88;
+                }
+
+        /* CHECKBOX (General) */
+        .custom-control-label::before {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+            background-color: #00ff88;
+            border-color: #00ff88;
+        }
+
+        @@media (max-width: 768px) {
+            .editor-sidebar {
+                width: 100%;
+            }
+
+            .dept-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* TIMELINE LOG (For Change History) */
+        .timeline-item {
+            position: relative;
+            padding-left: 20px;
+            border-left: 2px solid rgba(255,255,255,0.1);
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+        }
+
+            .timeline-item::before {
+                content: '';
+                position: absolute;
+                left: -6px;
+                top: 5px;
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background: #00ff88;
+                box-shadow: 0 0 5px #00ff88;
+            }
+
+        .timeline-date {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 2px;
+        }
+
+        .timeline-action {
+            font-weight: bold;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .timeline-detail {
+            color: #ccc;
+            font-size: 0.85rem;
+            background: rgba(255,255,255,0.05);
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 5px;
+        }
+
+        .type-Register::before {
+            background: #00b09b;
+            box-shadow: 0 0 5px #00b09b;
+        }
+
+        .type-Update::before {
+            background: #ffc107;
+            box-shadow: 0 0 5px #ffc107;
+        }
+
+        .log-change-container {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-top: 5px;
+        }
+
+        .log-change-item {
+            display: flex;
+            align-items: center;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.85rem;
+        }
+
+            .log-change-item:last-child {
+                border-bottom: none;
+            }
+
+        .change-label {
+            width: 120px;
+            color: #00b09b;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .change-old {
+            color: #ff6b6b;
+            text-decoration: line-through;
+            opacity: 0.7;
+            margin-right: 8px;
+        }
+
+        .change-arrow {
+            color: #6c757d;
+            font-size: 0.8rem;
+            margin: 0 8px;
+        }
+
+        .change-new {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        /* 🌟 FILTER BADGES (สำหรับหน้า Device) 🌟 */
+        .filter-badge {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+            .filter-badge:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                border-color: rgba(255,255,255,0.5) !important;
+            }
+
+            .filter-badge.active {
+                background: rgba(0, 255, 136, 0.2) !important;
+                border-color: #00ff88 !important;
+                color: #fff !important;
+            }
+
+                .filter-badge.active .text-info {
+                    color: #00ff88 !important;
+                }
+    </style>
+}
+
+<div class="container-fluid py-2">
+
+    <div class="row align-items-center mb-4">
+        <div class="col-12 col-lg-5 mb-3 mb-lg-0">
+            <h2 class="mb-0 font-weight-bold"><i class="fa fa-cogs text-success mr-2"></i>Admin Management</h2>
+        </div>
+        <div class="col-12 col-lg-7 d-flex flex-column flex-md-row justify-content-lg-end align-items-md-center">
+            <button class="btn btn-neon rounded-pill shadow mb-2 mb-md-0 mr-md-3" onclick="openEditor('add')">
+                <i class="fa fa-plus"></i> Add New
+            </button>
+            <div class="position-relative" style="width: 100%; max-width: 350px;">
+                <input type="text" id="searchAdmin" class="form-control rounded-pill pl-5" style="height: 40px;" placeholder="Search in current tab...">
+                <i class="fa fa-search position-absolute text-muted" style="left: 18px; top: 13px;"></i>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" id="mainTabs">
+        <li class="nav-item">
+            <a class="nav-link active" id="tab-users" data-toggle="tab" href="#usersList"><i class="fa fa-users mr-1"></i> Users</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-depts" data-toggle="tab" href="#deptsList"><i class="fa fa-building mr-1"></i> Departments</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-devices" data-toggle="tab" href="#devicesList"><i class="fa fa-tablet mr-1"></i> All Devices</a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="usersList">
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table-glass">
+                        <thead>
+                            <tr>
+                                <th width="20%">Username</th>
+                                <th width="25%">Full Name</th>
+                                <th width="10%">Role</th>
+                                <th width="30%">Departments</th>
+                                <th width="15%" class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbUsers"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="deptsList">
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table-glass">
+                        <thead><tr><th width="10%">ID</th><th width="30%">Dept Name</th><th width="45%">Emails</th><th width="15%" class="text-center">Action</th></tr></thead>
+                        <tbody id="tbDepts"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="devicesList">
+
+            <div id="adminAssetSummary"></div>
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table-glass">
+                        <thead><tr><th width="15%">Asset / Host</th><th width="20%">Dept / Owner</th><th width="15%" class="text-center">Target</th><th width="10%" class="text-center">Status</th><th width="25%" class="text-center">Action</th></tr></thead>
+                        <tbody id="tbDevices"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="sidebarBackdrop" class="sidebar-backdrop" onclick="closeEditor()"></div>
+<div id="editorSidebar" class="editor-sidebar">
+    <div class="editor-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 font-weight-bold text-white" id="sidebarTitle">Edit</h5>
+            <button type="button" class="btn btn-sm btn-outline-light rounded-circle border-0" onclick="closeEditor()"><i class="fa fa-times"></i></button>
+        </div>
+    </div>
+
+    <div class="editor-body">
+        <form id="userForm" style="display:none;">
+            <input type="hidden" name="is_edit" id="u_is_edit" value="false" />
+            <input type="hidden" name="dept_name" id="u_dept_hidden" />
+
+            <div class="form-group mb-3">
+                <label class="text-success font-weight-bold small">USERNAME / EMP NO *</label>
+                <input type="text" name="username" id="u_username" class="form-control" required />
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="text-muted small">FULL NAME</label>
+                <input type="text" name="full_name" id="u_fullname" class="form-control" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="text-info font-weight-bold small">EMAIL (&#64;mail.canon)</label>
+
+                <input type="text" name="email" id="u_email" class="form-control"
+                       placeholder="example&#64;mail.canon"
+                       pattern="^[a-zA-Z0-9._]+&#64;mail\.canon$"
+                       title="กรุณากรอกอีเมลที่ลงท้ายด้วย &#64;mail.canon เท่านั้น" />
+
+                <small class="text-white-50">ใช้สำหรับส่งลิงก์ตั้งรหัสผ่านครั้งแรก</small>
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="text-warning font-weight-bold small">USER ROLE *</label>
+                <select name="user_role" id="u_role" class="form-control" required>
+                    <option value="User">User (ทั่วไป)</option>
+                    <option value="Staff">Staff (พนักงานคุมระบบ)</option>
+                    <option value="Admin">Admin (ผู้ดูแลระบบ)</option>
+                </select>
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="text-muted small">ASSIGN DEPARTMENT(S)</label>
+                <div class="dept-grid-container">
+                    <div class="dept-grid-toolbar flex-wrap align-items-center">
+                        <div class="mb-2 w-100 position-relative">
+                            <input type="text" id="searchDeptGrid" class="form-control form-control-sm rounded-pill pl-4" placeholder="Search Dept..." style="height: 30px; background: rgba(0,0,0,0.5);">
+                            <i class="fa fa-search position-absolute text-muted small" style="left: 12px; top: 9px;"></i>
+                        </div>
+                        <div class="w-100 d-flex justify-content-between">
+                            <span class="small text-white-50"><i class="fa fa-list"></i> Select</span>
+                            <div>
+                                <a onclick="$('.dept-grid-item:visible .chk-dept').prop('checked', true);">Select All</a>
+                                <span class="text-white-50 mx-1">|</span>
+                                <a onclick="$('.chk-dept').prop('checked', false);" class="text-warning">Clear</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="deptGridContainer" class="dept-grid"></div>
+                </div>
+            </div>
+            <div class="text-right mt-4">
+                <button type="button" class="btn btn-outline-light rounded-pill mr-2" onclick="closeEditor()">Cancel</button>
+                <button type="submit" class="btn btn-neon rounded-pill px-4" id="btnSaveUser">Save</button>
+            </div>
+        </form>
+
+        <form id="deptForm" style="display:none;">
+            <input type="hidden" name="id" id="d_id" />
+            <div class="form-group mb-3"><label class="text-success font-weight-bold small">DEPARTMENT NAME *</label><input type="text" name="dept_name" id="d_name" class="form-control" required /></div>
+            <div class="form-group mb-3"><label class="text-muted small">EMAIL ALERTS</label><textarea name="email" id="d_email" class="form-control" rows="5"></textarea></div>
+            <div class="text-right mt-4"><button type="button" class="btn btn-outline-light rounded-pill mr-2" onclick="closeEditor()">Cancel</button><button type="submit" class="btn btn-neon rounded-pill px-4" id="btnSaveDept">Save</button></div>
+        </form>
+
+        <form id="deviceForm" style="display:none;">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="data_id" id="dev_id" />
+            <div class="form-group mb-3"><label class="text-success font-weight-bold small">ASSET NO *</label><input type="text" name="asset_no" id="dev_asset_no" class="form-control" required /></div>
+            <div class="form-group mb-3">
+                <label class="text-success font-weight-bold small">STATUS</label>
+                <select name="status" id="dev_status" class="form-control"><option value="Delivered">Active (Delivered)</option><option value="Stock">Stock</option></select>
+            </div>
+            <div class="glass-panel p-3 mb-3">
+                <label class="text-warning font-weight-bold small mb-2 d-block"><i class="fa fa-clock-o"></i> TARGET</label>
+                <div class="custom-control custom-checkbox mb-2">
+                    <input type="checkbox" class="custom-control-input" id="dev_check_morn" name="check_morn"><label class="custom-control-label text-white-50" for="dev_check_morn">Morning</label>
+                </div>
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="dev_check_night" name="check_night"><label class="custom-control-label text-white-50" for="dev_check_night">Night</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6 mb-3"><label class="text-muted small">HOST</label><input type="text" name="host_name" id="dev_host_name" class="form-control" /></div>
+                <div class="col-6 mb-3"><label class="text-muted small">OWNER</label><input type="text" name="owner" id="dev_owner" class="form-control" /></div>
+            </div>
+            <div class="form-group mb-3">
+                <label class="text-muted small">DEPT</label>
+                <select name="dept" id="dev_dept" class="form-control"><option value="">--</option></select>
+            </div>
+            <div class="form-group mb-3">
+                <label class="text-muted small">DETAIL</label>
+                <textarea name="detail" id="dev_detail" class="form-control" rows="2" placeholder="Additional details..."></textarea>
+            </div>
+            <div class="text-right mt-4">
+                <button type="button" class="btn btn-outline-light rounded-pill mr-2" onclick="closeEditor()">Cancel</button>
+                <button type="submit" class="btn btn-neon rounded-pill px-4" id="btnSaveDevice">Save Changes</button>
+            </div>
+        </form>
+
+        <div id="logContainer" style="display:none;"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            loadUsers();
+            loadDepts();
+            loadDevices();
+            loadDeptsForGrid();
+
+            // 🌟 ค้นหาแผนกใน Grid 🌟
+            $("#searchDeptGrid").on("keyup", function () {
+                var value = $(this).val().toLowerCase();
+                $(".dept-grid-item").filter(function () {
+                    $(this).toggle($(this).find("label").text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+
+            // ================= SUBMIT FORMS =================
+            $('#userForm').on('submit', function (e) {
+                e.preventDefault();
+                let selectedDepts = [];
+                $('.chk-dept:checked').each(function () { selectedDepts.push($(this).val()); });
+                $('#u_dept_hidden').val(selectedDepts.join(','));
+                submitForm(this, 'btnSaveUser', loadUsers, '@Url.Action("SaveUser", "Admin")');
+            });
+
+            // 🌟 SEARCH SCRIPT (ปรับให้ทำงานร่วมกับ Department Filter) 🌟
+            $("#searchAdmin").on("keyup", function () {
+                var activePaneId = $('.tab-pane.active').attr('id');
+
+                if (activePaneId === 'devicesList') {
+                    // ถ้าอยู่แท็บ Device ให้ใช้ฟังก์ชัน Filter แบบผสม
+                    applyDeviceFilters();
+                } else {
+                    // แท็บอื่นๆ ใช้แบบปกติ
+                    var value = $(this).val().toLowerCase();
+                    $('#' + activePaneId).find("tbody tr").filter(function () {
+                        $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                    });
+                }
+            });
+
+            // เคลียร์ช่อง Search และ Filter เวลาผู้ใช้กดสลับแท็บ
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                $("#searchAdmin").val('');
+                if (e.target.id === 'tab-devices') {
+                    clearDeptFilters(); // รีเซ็ต Filter ของ Device
+                } else {
+                    $(".tab-pane.active tbody tr").show();
+                }
+            });
+
+            // 🌟 ดักจับการแก้ไขและ Save สำหรับ Device Form (ยิง API ไปที่ DeviceController)
+            $('#deviceForm').on('submit', function (e) {
+                e.preventDefault();
+                let fd = new FormData(this);
+                fd.set('check_morn', $('#dev_check_morn').is(':checked'));
+                fd.set('check_night', $('#dev_check_night').is(':checked'));
+
+                // คำนวณหาว่ามีการแก้ไขอะไรบ้าง เพื่อเก็บเป็น Log
+                let changeLog = "New Registration by Admin";
+                if (devOriginalData) {
+                    let changes = [];
+                    const compare = (id, key, label) => { let newVal = $(id).val() || ""; let oldVal = devOriginalData[key] || ""; if (newVal != oldVal) changes.push(`${label}: '${oldVal}' -> '${newVal}'`); };
+                    const compareBool = (id, key, label) => { let newVal = $(id).is(':checked'); let oldVal = devOriginalData[key] === true; if (newVal !== oldVal) changes.push(`${label}: ${oldVal ? 'Yes' : 'No'} -> ${newVal ? 'Yes' : 'No'}`); };
+                    compare('#dev_asset_no', 'asset_no', 'Asset No');  compare('#dev_status', 'status', 'Status'); compare('#dev_host_name', 'host_name', 'Host Name'); compare('#dev_owner', 'owner_name', 'Owner'); compare('#dev_dept', 'dept_name', 'Department'); compare('#dev_detail', 'detail', 'Detail'); compareBool('#dev_check_morn', 'check_morn', 'Target Morning'); compareBool('#dev_check_night', 'check_night', 'Target Night');
+                    changeLog = changes.length > 0 ? changes.join(', ') : "No changes detected";
+                }
+                fd.append('change_details', changeLog);
+
+                // ยิง API ไปที่ Device Controller โดยตรง ไม่ต้องสร้าง Backend ใน Admin ใหม่
+                submitForm(this, 'btnSaveDevice', loadDevices, '@Url.Action("Save", "Device")');
+            });
+
+            $('#deptForm').on('submit', function (e) {
+                e.preventDefault();
+                let cleanedEmail = $('#d_email').val().replace(/[\n, ]+/g, ';').split(';').map(e => e.trim()).filter(e => e !== "").join(';');
+                $('#d_email').val(cleanedEmail);
+                submitForm(this, 'btnSaveDept', loadDepts, '@Url.Action("SaveDepartment", "Admin")');
+            });
+
+            // 🌟 SEARCH SCRIPT (ค้นหาเฉพาะ Tab ที่กำลังเปิดอยู่) 🌟
+            $("#searchAdmin").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+                var activePane = $('.tab-pane.active'); // หาว่าเปิดแท็บไหนอยู่
+
+                activePane.find("tbody tr").filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+
+            // เคลียร์ช่อง Search เวลาผู้ใช้กดสลับแท็บ
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                $("#searchAdmin").val('');
+                $(".tab-pane tbody tr").show(); // รีเซ็ตโชว์ข้อมูลทุกบรรทัดใหม่
+            });
+        });
+
+        function getActiveTab() { return $('.nav-tabs .active').attr('id'); }
+
+        // ================= LOAD DATA =================
+             function loadDeptsForGrid() {
+                fetch('@Url.Action("GetDepartments", "Admin")').then(r => r.json()).then(d => {
+                    let html = '';
+                    let devDeptHtml = '<option value="">-- Select Department --</option>'; // 🌟 ยิงเข้าฟอร์ม Device ด้วย
+                    
+                    d.forEach((r, idx) => {
+                        html += `<div class="dept-grid-item">
+                                    <input type="checkbox" class="chk-dept" id="chk_dept_${idx}" value="${r.dept_name}">
+                                    <label for="chk_dept_${idx}">${r.dept_name}</label>
+                                 </div>`;
+                        devDeptHtml += `<option value="${r.dept_name}">${r.dept_name}</option>`;
+                    });
+                    $('#deptGridContainer').html(html);
+                    $('#dev_dept').html(devDeptHtml); // 🌟 ยัดใส่ Dropdown
+                });
+            }
+
+           function loadUsers() {
+            fetch('@Url.Action("GetUsers", "Admin")').then(r => r.json()).then(d => {
+                let h = '';
+                d.forEach(r => {
+                    let deptsHtml = r.dept_name ? r.dept_name.split(',').map(dp => `<span class="badge badge-secondary mr-1 mb-1" style="background:rgba(255,255,255,0.1); font-weight:normal;">${dp.trim()}</span>`).join('') : '-';
+                    let emailHtml = r.email ? `<div class="small text-info"><i class="fa fa-envelope mr-1"></i>${r.email}</div>` : '';
+            
+                    // เพิ่มการจัดตกแต่งป้าย Role ให้ดูสวยงาม
+                    let roleBadge = r.user_role === 'Admin' ? '<span class="badge badge-danger">Admin</span>' 
+                                  : (r.user_role === 'Staff' ? '<span class="badge badge-warning">Staff</span>' 
+                                  : '<span class="badge badge-info">User</span>');
+        
+                    h += `<tr>
+                        <td class="font-weight-bold" style="color: #ffd32a;">${r.username}</td>
+                        <td>${r.full_name || '-'}${emailHtml}</td>
+                        <td>${roleBadge}</td> <td class="small">${deptsHtml}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-warning rounded-circle shadow-none mr-1" onclick='openEditor("edit_user", ${JSON.stringify(r).replace(/'/g, "&#39;")})'><i class="fa fa-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-danger rounded-circle shadow-none" onclick="deleteData('DeleteUser', '${r.username}')"><i class="fa fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                });
+                $('#tbUsers').html(h);
+            });
+        }
+
+        function loadDepts() {
+            fetch('@Url.Action("GetDepartments", "Admin")').then(r => r.json()).then(d => {
+                let h = '';
+                d.forEach(r => {
+                    let emailHtml = r.email ? r.email.split(';').filter(e => e.trim() !== "").map(e => `<div class="text-info"><i class="fa fa-envelope-o mr-1"></i>${e.trim()}</div>`).join('') : '-';
+                    h += `<tr>
+                        <td class="text-white-50">${r.id}</td>
+                        <td class="font-weight-bold text-success">${r.dept_name}</td>
+                        <td class="small">${emailHtml}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-warning rounded-circle shadow-none mr-1" onclick='openEditor("edit_dept", ${JSON.stringify(r).replace(/'/g, "&#39;")})'><i class="fa fa-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-danger rounded-circle shadow-none" onclick="deleteData('DeleteDepartment', '${r.id}')"><i class="fa fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                });
+                $('#tbDepts').html(h);
+            });
+        }
+
+        function loadDevices() {
+            fetch('@Url.Action("GetDevices", "Admin")').then(r => r.json()).then(d => {
+                
+                let totalAssets = d.length;
+                let deptCount = {};
+                d.forEach(r => {
+                    let dept = (r.dept_name && r.dept_name.trim() !== '') ? r.dept_name : 'No Dept';
+                    deptCount[dept] = (deptCount[dept] || 0) + 1;
+                });
+
+                $('#adminAssetSummary').addClass('d-flex flex-wrap align-items-center mb-3');
+
+                // 🌟 ปรับปุ่ม Total ให้ทำหน้าที่ "ล้าง Filter" (Clear All)
+                let summaryHtml = `<span class="badge badge-success px-3 py-2 mr-2 mb-1 shadow-sm filter-badge" id="btnFilterTotal" onclick="clearDeptFilters()" style="font-size: 0.85rem;">
+                                        Total: ${totalAssets}
+                                   </span>`;
+                                       
+                // 🌟 เพิ่ม class .filter-dept-btn และ data-dept ลงใน Badge แผนก
+                for (const [dept, count] of Object.entries(deptCount)) {
+                    summaryHtml += `<span class="badge px-2 py-2 mr-2 mb-1 filter-badge filter-dept-btn" data-dept="${dept}" style="font-size: 0.8rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #ccc;">
+                                        ${dept}: <b class="text-info ml-1" style="font-size: 0.9rem;">${count}</b>
+                                    </span>`;
+                }
+                
+                $('#adminAssetSummary').html(summaryHtml);
+
+                let h = '';
+                d.forEach(r => {
+                    let displayDept = (r.dept_name && r.dept_name.trim() !== '') ? r.dept_name : 'No Dept';
+                    // 🌟 แปะ data-dept ไว้ที่ <tr> เพื่อให้ JavaScript ค้นหาตอน Filter ได้ง่ายๆ
+                    h += `<tr data-dept="${displayDept}">
+                        <td class="pl-4"><b>${r.asset_no}</b><div class="small text-white-50">${r.host_name}</div></td>
+                        <td><span class="font-weight-bold text-info">${r.dept_name}</span><br><small class="text-white-50">Owner: ${r.owner_name}</small></td>
+                        <td class="text-center">${r.check_morn ? '<span class="badge badge-warning mr-1">M</span>' : ''} ${r.check_night ? '<span class="badge badge-info">N</span>' : ''}</td>
+                        <td class="text-center">${r.status === 'Delivered' ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-secondary">Stock</span>'}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-warning rounded-circle shadow-none mr-1" onclick='openEditor("edit_device", ${JSON.stringify(r).replace(/'/g, "&#39;")})'><i class="fa fa-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-info rounded-circle shadow-none mr-1" onclick="viewLogs('Check-IN', '${r.asset_no}', '@Url.Action("GetDeviceLog", "Admin")')"><i class="fa fa-history"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary rounded-circle shadow-none" onclick="viewLogs('Changes', '${r.id}', '@Url.Action("GetDeviceChangeLog", "Admin")')"><i class="fa fa-file-text-o"></i></button>
+                        </td>
+                    </tr>`;
+                });
+                $('#tbDevices').html(h);
+
+                // 🌟 ผูก Event ให้ปุ่ม Badge ที่เพิ่งสร้างเสร็จ
+                bindDeptFilterEvents();
+                applyDeviceFilters(); // รัน Filter 1 รอบเผื่อมีการเลือกค้างไว้
+            });
+        }
+
+        // ================= EDITOR & LOGIC =================
+        let devOriginalData = null;
+        let selectedFilterDepts = []; // 🌟 เก็บรายชื่อแผนกที่ถูกคลิกเลือก
+
+        function openEditor(action, data = null) {
+            // เคลียร์ฟอร์มทั้งหมดก่อนเปิด (ลบ ? ออก เพื่อให้ทำงานชัวร์ๆ)
+            $('#userForm').hide()[0].reset();
+            $('#deptForm').hide()[0].reset();
+            $('#deviceForm').hide()[0].reset();
+
+            $('#u_username').prop('readonly', false);
+            $('.chk-dept').prop('checked', false);
+            $('#logContainer').hide();
+            $('#searchDeptGrid').val('');
+            $('.dept-grid-item').show();
+
+            if (action === 'add') {
+                if (getActiveTab() === 'tab-users') {
+                    $('#sidebarTitle').text('New User');
+                    $('#u_is_edit').val('false');
+                    $('#u_role').val('User');
+                    $('#userForm').show();
+                }
+                else if (getActiveTab() === 'tab-depts') {
+                    $('#sidebarTitle').text('New Department');
+                    $('#d_id').val('');
+                    $('#deptForm').show();
+                }
+                else {
+                    // ถ้าแอดมินกด Add New ในแท็บ Device ให้เปิดฟอร์ม Device เปล่าๆ
+                    $('#sidebarTitle').text('New Device');
+                    devOriginalData = null;
+                    $('#dev_check_morn, #dev_check_night').prop('checked', true);
+                    $('#deviceForm').show();
+                }
+            }
+            else if (action === 'edit_user') {
+                $('#sidebarTitle').text('Edit User: ' + data.username);
+                $('#u_is_edit').val('true');
+                $('#u_username').val(data.username).prop('readonly', true);
+                $('#u_fullname').val(data.full_name);
+                $('#u_email').val(data.email);
+                $('#u_role').val(data.user_role || 'User');
+                if (data.dept_name) {
+                    let depts = data.dept_name.split(',').map(d => d.trim());
+                    $('.chk-dept').each(function () { if (depts.includes($(this).val())) $(this).prop('checked', true); });
+                }
+                $('#userForm').show();
+            }
+            else if (action === 'edit_dept') {
+                $('#sidebarTitle').text('Edit Dept: ' + data.dept_name);
+                $('#d_id').val(data.id);
+                $('#d_name').val(data.dept_name);
+                if (data.email) $('#d_email').val(data.email.split(';').map(e => e.trim()).filter(e => e !== "").join(';\n') + ';');
+                $('#deptForm').show();
+            }
+            // 🌟 เปิดฟอร์มแก้ Device 🌟
+            else if (action === 'edit_device') {
+                $('#sidebarTitle').text('Edit Device: ' + data.asset_no);
+                devOriginalData = { ...data };
+                $('#dev_id').val(data.id);
+                $('#dev_asset_no').val(data.asset_no);
+                $('#dev_status').val(data.status);
+                $('#dev_check_morn').prop('checked', data.check_morn);
+                $('#dev_check_night').prop('checked', data.check_night);
+                $('#dev_host_name').val(data.host_name);
+                $('#dev_owner').val(data.owner_name);
+                $('#dev_dept').val(data.dept_name);
+                $('#dev_detail').val(data.detail);
+
+                $('#deviceForm').show();
+            }
+
+            $('#sidebarBackdrop, #editorSidebar').addClass('active');
+        }
+
+        function closeEditor() { $('#sidebarBackdrop, #editorSidebar').removeClass('active'); }
+
+        function submitForm(formEl, btnId, reloadCallback, targetUrl) {
+            let fd = new FormData(formEl);
+            let btn = $('#' + btnId); let txt = btn.html();
+            btn.html('<i class="fa fa-spinner fa-spin"></i> Saving...').prop('disabled', true);
+
+            fetch(targetUrl, { method: 'POST', body: fd }).then(r => r.json()).then(d => {
+                btn.html(txt).prop('disabled', false);
+                
+                if (d.status === 'success') { 
+                    closeEditor(); 
+                    reloadCallback(); 
+                    if(btnId === 'btnSaveDept') loadDeptsForGrid(); 
+                    
+                    // 🌟 ถ้า Save User สำเร็จ และมี Email ให้เด้งถาม
+                    if(btnId === 'btnSaveUser' && d.hasEmail) {
+                        Swal.fire({
+                            title: 'Send Setup Link?',
+                            text: 'Do you want to send a password setup link to this user?',
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, Send Email',
+                            cancelButtonText: 'No, Thanks',
+                            background: '#1a2530', color: '#fff', confirmButtonColor: '#00b09b'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                sendSetupEmail(d.username);
+                            }
+                        });
+                    } else {
+                        Swal.fire({ icon: 'success', title: 'Saved', timer: 1000, showConfirmButton: false, background: '#1a2530', color: '#fff' }); 
+                    }
+                }
+                else { Swal.fire({title: 'Error', text: d.message, icon: 'error', background: '#1a2530', color: '#fff'}); }
+            }).catch(err => { btn.html(txt).prop('disabled', false); Swal.fire({title: 'Error', text: 'Network Error', icon: 'error', background: '#1a2530', color: '#fff'}); });
+        }
+
+        // ฟังก์ชันสั่งยิง Email
+        function sendSetupEmail(username) {
+            Swal.fire({ title: 'Sending...', background: '#1a2530', color: '#fff', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+            
+            let fd = new FormData();
+            fd.append('username', username);
+            
+            fetch('@Url.Action("SendSetupLink", "Admin")', { method: 'POST', body: fd })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.status === 'success') {
+                        Swal.fire({ icon: 'success', title: 'Sent!', text: 'Email sent successfully.', background: '#1a2530', color: '#fff' });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Failed', text: d.message, background: '#1a2530', color: '#fff' });
+                    }
+                });
+        }
+
+        function deleteData(actionName, id) {
+            Swal.fire({ title: 'Are you sure?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Delete', background: '#1a2530', color: '#fff' }).then((result) => {
+                if (result.isConfirmed) {
+                    let fd = new FormData(); fd.append('id', id);
+                    fetch(`@Url.Action("PH", "Admin")`.replace("PH", actionName), { method: 'POST', body: fd }).then(r => r.json()).then(d => {
+                        if (d.status === 'success') { if(actionName === 'DeleteUser') loadUsers(); else { loadDepts(); loadDeptsForGrid(); } }
+                        else Swal.fire({title: 'Error', text: d.message, icon: 'error', background: '#1a2530', color: '#fff'});
+                    });
+                }
+            });
+        }
+
+        // ================= LOGS =================
+        let curLogUrl = ''; let curLogId = ''; let curLogOffset = 0;
+        function viewLogs(type, id, url, append = false) {
+            if (!append) {
+                curLogId = id; curLogUrl = url; curLogOffset = 0;
+
+                // เพิ่ม #deviceForm เข้าไปเพื่อให้มันซ่อนฟอร์มแก้ไขอุปกรณ์ก่อนโชว์ Log
+                $('#userForm, #deptForm, #deviceForm').hide();
+                $('#logContainer').show();
+
+                $('#sidebarTitle').html(`${type} Log: <span class="text-warning">${id}</span>`);
+                $('#sidebarBackdrop, #editorSidebar').addClass('active');
+                $('#logContainer').html('<div class="text-center py-5 text-warning"><i class="fa fa-spinner fa-spin fa-2x"></i></div>');
+            }
+
+            fetch(`${curLogUrl}?${url.includes('ChangeLog') ? 'id' : 'asset_no'}=${encodeURIComponent(curLogId)}&offset=${curLogOffset}`)
+                .then(r => r.json()).then(data => {
+                    let html = '';
+                    if (data.length === 0 && !append) { $('#logContainer').html('<div class="text-center text-muted mt-5">No logs found.</div>'); return; }
+
+                    data.forEach(l => {
+                        let isCheckIn = type === 'Check-IN';
+                        let icon = isCheckIn ? '<i class="fa fa-map-marker"></i>' : '<i class="fa fa-pencil"></i>';
+                        let detail = isCheckIn ? `<span class="badge badge-dark border">${l.checkin_shift}</span> <span class="badge badge-${l.status==='OK'?'success':'warning'}">${l.status}</span>` : formatDetails(l.details);
+                        html += `<div class="timeline-item"><div class="timeline-date"><i class="fa fa-calendar-o mr-1"></i> ${isCheckIn ? l.checkin_time : l.date}</div>
+                                 <div class="timeline-action">${icon} ${isCheckIn ? l.ip_address : l.action}</div>
+                                 <div class="timeline-detail">${detail}</div></div>`;
+                    });
+
+                    if (!append) $('#logContainer').html(`<div id="logWrapper" class="mt-3">${html}</div><div id="loadMoreWrapper" class="text-center pt-2 pb-4"></div>`);
+                    else $('#logWrapper').append(html);
+
+                    if (data.length === 20) $('#loadMoreWrapper').html(`<button class="btn btn-sm btn-outline-warning rounded-pill px-4" onclick="loadMoreLogs()">Load More</button>`);
+                    else $('#loadMoreWrapper').empty();
+                });
+        }
+        function loadMoreLogs() { curLogOffset += 20; viewLogs('', curLogId, curLogUrl, true); }
+        function formatDetails(txt) { return txt.replace(/(.*?):\s*(.*?)\s*->\s*(.*)/g, '<div class="log-change-item"><span class="change-old">$2</span><i class="fa fa-arrow-right mx-2 text-muted"></i><span class="change-new">$3</span></div>'); }
+
+
+        // ================= FILTER LOGIC =================
+        function bindDeptFilterEvents() {
+            $('.filter-dept-btn').off('click').on('click', function () {
+                let dept = $(this).data('dept');
+
+                // เช็คว่าเคยเลือกไปหรือยัง (Toggle)
+                if (selectedFilterDepts.includes(dept)) {
+                    selectedFilterDepts = selectedFilterDepts.filter(d => d !== dept); // เอาออก
+                    $(this).removeClass('active');
+                } else {
+                    selectedFilterDepts.push(dept); // เพิ่มเข้าไป
+                    $(this).addClass('active');
+                }
+
+                applyDeviceFilters();
+            });
+        }
+
+        function clearDeptFilters() {
+            selectedFilterDepts = [];
+            $('.filter-dept-btn').removeClass('active');
+            applyDeviceFilters();
+        }
+
+        function applyDeviceFilters() {
+            let searchText = $("#searchAdmin").val().toLowerCase();
+
+            // ค้นหาทุกบรรทัดในตาราง Device
+            $("#tbDevices tr").each(function () {
+                let rowText = $(this).text().toLowerCase();
+                let rowDept = $(this).data('dept');
+
+                // เงื่อนไข 1: ตรงกับคำค้นหาไหม?
+                let matchSearch = rowText.indexOf(searchText) > -1;
+                // เงื่อนไข 2: ตรงกับแผนกที่เลือกไหม? (ถ้าไม่เลือกอะไรเลย = ผ่านทั้งหมด)
+                let matchDept = selectedFilterDepts.length === 0 || selectedFilterDepts.includes(rowDept);
+
+                if (matchSearch && matchDept) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+
+            // ปรับสีปุ่ม Total ให้อ่อนลงเวลาที่มีการเลือกแผนก
+            if (selectedFilterDepts.length > 0) {
+                $('#btnFilterTotal').removeClass('badge-success').addClass('badge-secondary').css('opacity', '0.5');
+            } else {
+                $('#btnFilterTotal').removeClass('badge-secondary').addClass('badge-success').css('opacity', '1');
+            }
+        }
+    </script>
+}

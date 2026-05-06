@@ -1,0 +1,191 @@
+﻿@{
+    Layout = null; // ปิด Layout เพื่อให้หน้า Error ทำงานได้ 100% แม้ระบบโครงสร้างหลักจะมีปัญหา
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Oops! Error - Tablet Check-IN</title>
+
+    <link href="~/Content/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/Content/tablet/bootstrap.min.css" rel="stylesheet" />
+
+    <style>
+        body {
+            background: radial-gradient(circle at center, #1a252e 0%, #0d1318 100%);
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- กล่อง Error แบบ Glassmorphism --- */
+        .error-container {
+            text-align: center;
+            padding: 50px 40px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            max-width: 450px;
+            width: 90%;
+            z-index: 10;
+            animation: floatUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* --- ไอคอนกระพริบสีแดง --- */
+        .error-icon {
+            font-size: 5.5rem;
+            color: #ff5252;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 82, 82, 0.4);
+            animation: pulse-icon 2s infinite ease-in-out;
+        }
+
+        .error-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            color: #fff;
+        }
+
+        .error-desc {
+            color: #aaa;
+            font-size: 0.95rem;
+            margin-bottom: 35px;
+            line-height: 1.6;
+        }
+
+        /* --- ปุ่มสีเขียว Neon --- */
+        .btn-neon {
+            background: linear-gradient(90deg, #00b09b, #96c93d);
+            border: none;
+            color: white;
+            font-weight: 600;
+            border-radius: 50px;
+            padding: 12px 35px;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 15px rgba(0, 176, 155, 0.4);
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+            .btn-neon:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 25px rgba(0, 176, 155, 0.6);
+                color: white;
+                text-decoration: none;
+            }
+
+        /* --- Animations --- */
+        @@keyframes floatUp {
+            0% {
+                opacity: 0;
+                transform: translateY(60px) scale(0.9);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @@keyframes pulse-icon {
+            0%, 100% {
+                transform: scale(1);
+                text-shadow: 0 0 20px rgba(255, 82, 82, 0.4);
+            }
+
+            50% {
+                transform: scale(1.1);
+                text-shadow: 0 0 40px rgba(255, 82, 82, 0.8);
+            }
+        }
+
+        /* --- ฝุ่นลอยพื้นหลัง (Particles) --- */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(0, 255, 136, 0.15);
+            animation: float-particle linear infinite;
+            z-index: 1;
+        }
+
+        @@keyframes float-particle {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="particles"></div>
+
+    <div class="error-container">
+        <i class="fa fa-exclamation-triangle error-icon"></i>
+        <h1 class="error-title">SYSTEM ERROR</h1>
+        <p class="error-desc">
+            โอ๊ะโอ! ดูเหมือนระบบจะพบข้อผิดพลาดบางอย่าง<br>
+            ไม่ต้องตกใจไป ข้อมูลของคุณยังปลอดภัย<br>
+            กรุณากลับไปเริ่มต้นใหม่ที่หน้าหลักนะครับ
+        </p>
+
+        <a href="@Url.Action("Index", "Monitor")" class="btn-neon">
+            <i class="fa fa-home mr-2"></i> กลับสู่หน้าหลัก
+        </a>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const particleContainer = document.getElementById('particles');
+            const particleCount = 15; // จำนวนเม็ดฝุ่น
+
+            for (let i = 0; i < particleCount; i++) {
+                let particle = document.createElement('div');
+                particle.className = 'particle';
+
+                // สุ่มขนาด (Size)
+                let size = Math.random() * 15 + 5;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+
+                // สุ่มตำแหน่งเริ่มต้น (Position)
+                particle.style.left = Math.random() * 100 + 'vw';
+
+                // สุ่มความเร็ว (Duration)
+                let duration = Math.random() * 10 + 10;
+                particle.style.animationDuration = duration + 's';
+
+                // สุ่มเวลาดีเลย์ (Delay)
+                particle.style.animationDelay = Math.random() * 5 + 's';
+
+                particleContainer.appendChild(particle);
+            }
+        });
+    </script>
+</body>
+</html>

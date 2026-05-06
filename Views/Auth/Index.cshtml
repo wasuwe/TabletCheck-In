@@ -1,0 +1,315 @@
+﻿@{
+    // ใช้ _Layout ตัวเดิม เพื่อให้ได้พื้นหลังสีน้ำเงิน
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        /* 🌟 ซ่อน Navbar ของ Layout กลางเฉพาะในหน้านี้ 🌟 */
+        .global-navbar {
+            display: none !important;
+        }
+
+        .login-container {
+            /* ใช้ 100vh ลบด้วย padding เผื่อไว้ให้มันอยู่กลางเป๊ะๆ */
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* เพิ่มลูกเล่นให้แบคกราวด์ขยับนิดๆ (ถ้าใช้กับ Layout เดิมมันจะเนียนตาขึ้น) */
+            background-size: 200% 200%;
+            animation: gradientMove 15s ease infinite;
+        }
+
+        /* 🌟 Gimmick 1: อนิเมชันพื้นหลังขยับ 🌟 */
+        @@keyframes gradientMove {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* 🌟 Gimmick 2: กล่องลอยขึ้นลงเบาๆ (Floating Effect) 🌟 */
+        .login-box {
+            max-width: 420px;
+            width: 100%;
+            padding: 50px 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            animation: floating 6s ease-in-out infinite;
+            transition: all 0.4s ease;
+        }
+
+            /* 🌟 Gimmick 3: แสงออร่าตอนเมาส์ชี้ 🌟 */
+            .login-box:hover {
+                box-shadow: 0 15px 50px rgba(0, 255, 136, 0.2);
+                border-color: rgba(0, 255, 136, 0.3);
+            }
+
+        @@keyframes floating {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        .login-header-icon {
+            font-size: 3rem;
+            color: #00ff88;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(0,255,136,0.5);
+        }
+
+        /* 🌟 Gimmick 4: Input พร้อมไอคอนข้างใน 🌟 */
+        .input-group-custom {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+            .input-group-custom i {
+                position: absolute;
+                left: 20px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #00b09b;
+                font-size: 1.1rem;
+                transition: 0.3s;
+            }
+
+        .form-control-login {
+            background: rgba(0,0,0,0.4) !important;
+            color: #fff !important;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50px;
+            padding-left: 50px; /* เว้นที่ให้ไอคอน */
+            height: 50px;
+            font-size: 1rem;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+            .form-control-login:focus {
+                border-color: #00ff88;
+                background: rgba(0,0,0,0.6) !important;
+                box-shadow: 0 0 15px rgba(0,255,136,0.3);
+                outline: none;
+            }
+
+                /* ไฟสว่างที่ไอคอนตอนช่องนั้นถูก Focus */
+                .form-control-login:focus + i,
+                .input-group-custom:focus-within i {
+                    color: #00ff88;
+                    text-shadow: 0 0 10px rgba(0,255,136,0.5);
+                }
+
+            .form-control-login::placeholder {
+                color: rgba(255,255,255,0.4);
+            }
+
+        .btn-neon {
+            background: linear-gradient(90deg, #00b09b, #96c93d);
+            border: none;
+            color: white;
+            font-weight: 800;
+            border-radius: 50px;
+            padding: 14px 20px;
+            box-shadow: 0 4px 15px rgba(0, 176, 155, 0.4);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            width: 100%;
+            letter-spacing: 2px;
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+
+            .btn-neon:hover {
+                transform: translateY(-3px) scale(1.02);
+                box-shadow: 0 8px 25px rgba(0, 176, 155, 0.6);
+            }
+
+            .btn-neon:active {
+                transform: translateY(1px);
+            }
+
+        .btn-guest {
+            border-radius: 50px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #ccc;
+            transition: 0.3s;
+        }
+
+            .btn-guest:hover {
+                background: rgba(255,255,255,0.15);
+                color: #fff;
+                border-color: #fff;
+            }
+
+        #lblMsg {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+            #lblMsg.show {
+                opacity: 1;
+            }
+    </style>
+}
+
+<div class="login-container">
+    <div class="glass-panel login-box text-center">
+        <div class="login-header-icon">
+            <i class="fa fa-tablet"></i>
+        </div>
+
+        <h3 class="font-weight-bold mb-1" style="color: #fff; letter-spacing: 1px;">Tablet Check-IN</h3>
+        <p class="text-white-50 mb-4 small" style="letter-spacing: 0.5px;">Authenticate to access the system</p>
+
+        <form id="frmLogin">
+            @Html.AntiForgeryToken()
+
+            <div class="input-group-custom">
+                <input type="text" id="txtUser" name="Username" class="form-control-login" placeholder="Username / ID" required autocomplete="off" autofocus>
+                <i class="fa fa-user"></i>
+            </div>
+
+            <div class="input-group-custom mb-1">
+                <input type="password" id="txtPass" name="Password" class="form-control-login" placeholder="Password" required>
+                <i class="fa fa-lock"></i>
+            </div>
+
+            <div class="text-right mb-3 pr-2">
+                <a href="javascript:void(0);" onclick="forgotPassword()" class="text-white-50 small font-weight-bold" style="text-decoration: underline; transition: 0.3s;" onmouseover="this.style.color='#00ff88'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">
+                    Forgot Password?
+                </a>
+            </div>
+
+            <button type="submit" class="btn btn-neon" id="btnLogin">LOGIN</button>
+
+            <div id="lblMsg" class="text-warning small mt-3 font-weight-bold" style="height: 20px;"></div>
+
+            <div class="mt-4 pt-3" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                <div class="text-white-50 mb-3 small" style="font-size: 0.7rem; letter-spacing: 2px;">OR ACCESS AS GUEST</div>
+                <a href="@Url.Action("Index", "Monitor")" class="btn btn-guest w-100">
+                    <i class="fa fa-television mr-2 text-info"></i> GUEST MONITOR
+                </a>
+            </div>
+
+            <div class="mt-4 pt-2 text-white-50" style="font-size: 0.7rem; letter-spacing: 1px; opacity: 0.6;">
+                &copy; 2026 htmfg2 IT Team
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // เมื่อพิมพ์รหัสผ่าน ให้โชว์/ซ่อนไอคอนกุญแจ
+            $('#txtPass').on('keyup', function() {
+                let icon = $(this).siblings('i');
+                if($(this).val().length > 0) {
+                    icon.removeClass('fa-lock').addClass('fa-unlock-alt');
+                } else {
+                    icon.removeClass('fa-unlock-alt').addClass('fa-lock');
+                }
+            });
+
+            $('#frmLogin').on('submit', function(e) {
+                e.preventDefault();
+                let btn = $('#btnLogin');
+
+                btn.html('<i class="fa fa-circle-o-notch fa-spin mr-2"></i> AUTHENTICATING...').prop('disabled', true);
+                $('#lblMsg').removeClass('show').text('');
+
+                let fd = new FormData(this);
+
+                setTimeout(() => {
+                    fetch('@Url.Action("DoLogin", "Auth")', {
+                        method: 'POST',
+                        body: fd
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if(data.status === 'success') {
+                            btn.html('<i class="fa fa-check mr-2"></i> SUCCESS').removeClass('btn-neon').css({
+                                'background': '#2ecc71', 'box-shadow': '0 0 20px rgba(46, 204, 113, 0.6)'
+                            });
+                            setTimeout(() => { window.location.href = data.redirectUrl; }, 600);
+                        } else {
+                            $('#lblMsg').text(data.message).addClass('show');
+                            btn.html('LOGIN').prop('disabled', false);
+
+                            $('.login-box').css('animation', 'none');
+                            setTimeout(() => $('.login-box').css('transform', 'translateX(-10px)'), 50);
+                            setTimeout(() => $('.login-box').css('transform', 'translateX(10px)'), 150);
+                            setTimeout(() => $('.login-box').css('transform', 'translateX(-10px)'), 250);
+                            setTimeout(() => $('.login-box').css('transform', 'translateX(0)'), 350);
+                            setTimeout(() => $('.login-box').css('animation', 'floating 6s ease-in-out infinite'), 500);
+                        }
+                    })
+                    .catch(err => {
+                        $('#lblMsg').text('Network connection failed.').addClass('show');
+                        btn.html('LOGIN').prop('disabled', false);
+                    });
+                }, 500);
+            });
+        });
+
+        // 🌟 สคริปต์ Popup สำหรับลืมรหัสผ่าน 🌟
+        function forgotPassword() {
+            Swal.fire({
+                title: 'Forgot Password?',
+                text: 'Please enter your Username or Employee ID',
+                input: 'text',
+                inputPlaceholder: 'Enter your ID here...',
+                background: '#1a2530', color: '#fff',
+                showCancelButton: true,
+                confirmButtonText: 'Send Password', // เปลี่ยนข้อความปุ่ม
+                confirmButtonColor: '#00b09b',
+                inputValidator: (value) => {
+                    if (!value) return 'You need to enter your ID!'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let username = result.value;
+
+                    Swal.fire({ title: 'Sending...', text: 'Please wait', background: '#1a2530', color: '#fff', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+
+                    let fd = new FormData();
+                    fd.append('username', username);
+
+                    // 🟢 เปลี่ยนมาเรียก Action ตัวใหม่ (SendPasswordDirectly)
+                    fetch('@Url.Action("SendPasswordDirectly", "Auth")', { method: 'POST', body: fd })
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.status === 'success') {
+                            Swal.fire({ icon: 'success', title: 'Sent!', text: 'Your password has been sent to your email.', background: '#1a2530', color: '#fff' });
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Failed', text: d.message, background: '#1a2530', color: '#fff' });
+                        }
+                    })
+                    .catch(() => {
+                        Swal.fire({ icon: 'error', title: 'Error', text: 'Network connection failed.', background: '#1a2530', color: '#fff' });
+                    });
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,159 @@
+﻿@using TabletCheckIn.Utility
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>@ViewBag.Title - Tablet Check-IN</title>
+
+    <link href="~/Content/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/Content/tablet/bootstrap.min.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-3.7.1.min.js"></script>
+    <script src="~/Scripts/tablet/sweetalert2@11.js"></script>
+    <script src="~/Scripts/tablet/popper.min.js"></script>
+    <script src="~/Scripts/tablet/bootstrap.min.js"></script>
+
+    <style>
+        /* --- CORE THEME --- */
+        body {
+            background: radial-gradient(circle at 10% 20%, #051937 0%, #004d7a 60%, #008793 100%);
+            background-attachment: fixed;
+            font-family: 'Prompt', sans-serif;
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(18, 25, 35, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.25);
+            padding: 20px;
+            transition: transform 0.3s;
+        }
+
+        /* --- GLOBAL NAVBAR --- */
+        .global-navbar {
+            background: rgba(16, 24, 32, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            padding: 10px 20px;
+        }
+
+            .global-navbar .navbar-brand {
+                font-weight: 800;
+                letter-spacing: 1px;
+                color: #fff;
+            }
+
+            .global-navbar .nav-link {
+                color: #ccc;
+                font-weight: 500;
+                margin: 0 5px;
+                transition: 0.3s;
+                border-radius: 8px;
+                padding: 8px 15px;
+            }
+
+                .global-navbar .nav-link:hover, .global-navbar .nav-link.active {
+                    color: #00ff88;
+                    background: rgba(0,255,136,0.1);
+                }
+
+        .btn-neon {
+            background: linear-gradient(90deg, #00b09b, #96c93d);
+            border: none;
+            color: white;
+            font-weight: 600;
+            border-radius: 50px;
+            padding: 6px 20px;
+            box-shadow: 0 4px 15px rgba(0, 176, 155, 0.4);
+            transition: 0.3s;
+        }
+
+            .btn-neon:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(0, 176, 155, 0.6);
+                color: white;
+            }
+    </style>
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg global-navbar mb-3">
+        <a class="navbar-brand" href="@Url.Action("Index", "Monitor")">
+            <i class="fa fa-tablet text-success mr-1"></i> Check-IN
+        </a>
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-toggle="collapse" data-target="#topNavBar">
+            <i class="fa fa-bars text-white"></i>
+        </button>
+
+        <div class="collapse navbar-collapse" id="topNavBar">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="@Url.Action("Index", "Monitor")"><i class="fa fa-desktop"></i> Monitor</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="@Url.Action("Index", "Report")"><i class="fa fa-bar-chart"></i> Report</a>
+                </li>
+                @if (Session["Username"] != null)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("Index", "Device")"><i class="fa fa-sliders"></i> Manage Devices</a>
+                    </li>
+                }
+                @if (AuthHelper.HasRole("Admin"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link text-warning" href="@Url.Action("Index", "Admin")"><i class="fa fa-cogs"></i> Admin</a>
+                    </li>
+                }
+            </ul>
+            <ul class="navbar-nav ml-auto align-items-center">
+                @if (Session["Username"] != null)
+                {
+                    <li class="nav-item mr-3 text-right d-none d-lg-block">
+                        <div class="small text-white-50" style="line-height: 1;">Welcome,</div>
+                        <div class="font-weight-bold text-white" style="font-size: 0.85rem;">@Session["FullName"]</div>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-sm btn-danger rounded-pill px-3 shadow" onclick="doGlobalLogout()">
+                            <i class="fa fa-power-off"></i> Logout
+                        </button>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="btn btn-sm btn-neon rounded-pill px-4" href="@Url.Action("Index", "Auth")">
+                            <i class="fa fa-sign-in"></i> Login
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </nav>
+
+    @RenderBody()
+
+    <script>
+        function doGlobalLogout() {
+            Swal.fire({
+                title: 'Logout?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Yes', confirmButtonColor: '#d33', background: '#1a2530', color: '#fff'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('@Url.Action("Logout", "Auth")', { method: 'POST' })
+                        .then(r => r.json())
+                        .then(d => { window.location.href = '@Url.Action("Index", "Monitor")'; });
+                }
+            });
+        }
+    </script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

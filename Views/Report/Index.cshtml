@@ -1,0 +1,749 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Monthly Report";
+}
+
+@section Styles {
+
+    <link href="~/Content/tablet/flatpickr.min.css" rel="stylesheet" />
+    <link href="~/Content/tablet/monthSelectstyle.css" rel="stylesheet" />
+
+    <style>
+        .report-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        /* --- FILTER BAR (Optimized) --- */
+        .filter-bar {
+            background: rgba(16, 24, 32, 0.9);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 100;
+        }
+
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+            .filter-item label {
+                font-size: 0.8rem;
+                color: #ccc;
+                margin-bottom: 4px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+        .form-control-dark {
+            background: rgba(0, 0, 0, 0.5) !important;
+            border: 1px solid rgba(255,255,255,0.15) !important;
+            color: #fff !important;
+            border-radius: 8px;
+            height: 38px;
+            transition: border-color 0.2s;
+        }
+
+            .form-control-dark:focus {
+                background: rgba(0, 0, 0, 0.8) !important;
+                border-color: #00ff88 !important;
+                color: #00ff88 !important; /* 🌟 บังคับสีอักษรเป็นสีเขียวตอนพิมพ์ */
+                box-shadow: none !important;
+                outline: none !important;
+            }
+
+        .report-container {
+            display: flex;
+            flex-direction: column;
+            /* 🌟 เปลี่ยนจาก 100vh เป็น calc หักลบความสูง Nav bar (ปรับตัวเลข 70px ได้ตามจริง) */
+            height: calc(100vh - 70px);
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        /* 🌟 สร้างคลาสใหม่สำหรับ Datepicker (ลบ #filter_month อันเก่าทิ้งได้เลย) */
+        .date-picker-custom {
+            cursor: pointer !important;
+            text-align: center !important;
+            color: #00ff88 !important;
+            font-weight: bold !important;
+        }
+
+        /* --- TABLE WRAPPER --- */
+        .table-wrapper {
+            flex: 1;
+            overflow: auto;
+            background: rgba(20, 30, 40, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+            -webkit-overflow-scrolling: touch;
+            will-change: transform;
+        }
+
+        /* --- TABLE STYLES --- */
+        .table-report {
+            width: max-content;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+            .table-report th, .table-report td {
+                padding: 8px 4px;
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+                border-right: 1px solid rgba(255,255,255,0.03);
+                vertical-align: middle;
+                text-align: center;
+            }
+
+            .table-report tbody tr:hover {
+                background-color: rgba(255,255,255,0.05);
+            }
+
+                .table-report tbody tr:hover .col-fixed {
+                    background-color: #1e2b36;
+                }
+
+            /* --- STICKY HEADERS --- */
+            .table-report thead th {
+                position: sticky;
+                top: 0;
+                background: #0f171e;
+                z-index: 10;
+                color: #00ff88;
+                font-size: 0.8rem;
+                text-transform: uppercase;
+                height: 40px;
+            }
+
+            .table-report thead tr:first-child th {
+                border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+            }
+
+            .table-report thead tr:nth-child(2) th {
+                top: 40px;
+                z-index: 10;
+                font-size: 0.7rem;
+                color: #aaa;
+                background: #162029;
+                border-bottom: 2px solid rgba(255,255,255,0.1);
+            }
+
+        /* Fixed First Column */
+        .col-fixed {
+            position: sticky;
+            left: 0;
+            background: #152028;
+            z-index: 20;
+            border-right: 1px solid rgba(255,255,255,0.05) !important;
+            width: 220px;
+            min-width: 220px;
+            text-align: left !important;
+            padding-left: 15px !important;
+        }
+
+        .table-report thead th.col-fixed {
+            z-index: 30;
+            background: #152028;
+        }
+
+        /* Fixed Second Column (Score) */
+        .col-score {
+            position: sticky;
+            left: 220px;
+            background: #152028;
+            z-index: 20;
+            border-right: 2px solid #00ff88 !important;
+            width: 85px;
+            min-width: 85px;
+            text-align: center !important;
+            vertical-align: middle !important;
+            padding: 8px 6px !important;
+        }
+
+        .table-report thead th.col-score {
+            z-index: 30;
+            background: #0f171e;
+        }
+
+        .table-report tbody tr:hover .col-score {
+            background-color: #1a252e;
+        }
+
+        /* --- CELL STATUS (Optimized) --- */
+        .cell-status {
+            width: 38px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.65rem;
+            margin: 0 auto;
+        }
+
+            .cell-status:hover {
+                background-color: rgba(255,255,255,0.1);
+                cursor: pointer;
+            }
+
+        .st-ok {
+            background: rgba(46, 204, 113, 0.15);
+            border: 1px solid rgba(46, 204, 113, 0.5);
+            color: #2ecc71;
+        }
+
+        .st-delay {
+            background: rgba(243, 156, 18, 0.15);
+            border: 1px solid rgba(243, 156, 18, 0.5);
+            color: #f39c12;
+        }
+
+        .st-missed {
+            background: rgba(231, 76, 60, 0.15);
+            border: 1px solid rgba(231, 76, 60, 0.5);
+            color: #e74c3c;
+        }
+
+        .st-na {
+            background: rgba(255,255,255,0.02);
+            color: #444;
+        }
+
+        .st-wait {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px dashed #ffc107;
+            color: #ffc107;
+        }
+
+        .st-stock {
+            background: rgba(52, 152, 219, 0.15);
+            border: 1px solid rgba(52, 152, 219, 0.5);
+            color: #3498db;
+        }
+
+        .status-icon {
+            font-size: 0.8rem;
+        }
+        /* 🌟 สีเวลาเล็กๆ ใต้ไอคอน */
+        .time-text {
+            font-size: 0.55rem;
+            opacity: 0.8;
+            font-weight: normal;
+            margin-bottom: -2px;
+        }
+
+        /* --- RESPONSIVE --- */
+        @@media (max-width: 768px) {
+            .col-fixed {
+                width: 150px !important;
+                min-width: 150px !important;
+            }
+
+            .col-score {
+                left: 150px;
+                width: 75px !important;
+                min-width: 75px !important;
+            }
+
+            .cell-status {
+                width: 32px;
+                height: 30px;
+            }
+
+            .filter-bar {
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .filter-item {
+                width: 100%;
+                flex: 1 1 100%;
+            }
+        }
+
+        .btn-outline-light {
+            border-radius: 50px;
+            padding: 8px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* --- MULTI-SELECT DROPDOWN STYLE --- */
+        .dept-dropdown-menu {
+            background: #101820;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            min-width: 250px;
+            max-height: 300px;
+            overflow-y: auto;
+            border-radius: 8px;
+            z-index: 1050;
+        }
+
+        .dept-checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #ddd;
+            user-select: none;
+        }
+
+            .dept-checkbox-item:hover {
+                background: rgba(255, 255, 255, 0.1);
+                color: #fff;
+            }
+
+            .dept-checkbox-item input[type="checkbox"] {
+                margin-right: 12px;
+                accent-color: #00ff88;
+                width: 16px;
+                height: 16px;
+                cursor: pointer;
+            }
+
+        .dropdown-toggle-custom {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fff;
+            border-radius: 8px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0 15px;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+            .dropdown-toggle-custom:hover {
+                border-color: #00ff88;
+                color: #fff;
+                text-decoration: none;
+            }
+
+        /* --- LOADER --- */
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+        }
+
+        .loader-ring {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            margin-bottom: 20px;
+            border: 3px solid rgba(0, 255, 136, 0.3);
+            border-top-color: #00ff88;
+            border-radius: 50%;
+            animation: spin-loader 1s linear infinite;
+        }
+
+        .loading-text {
+            font-size: 1rem;
+            color: #00ff88;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        @@keyframes spin-loader {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* --- DAY SEPARATOR & HOLIDAY HIGHLIGHT --- */
+        .day-separator {
+            border-right: 2px solid rgba(255, 255, 255, 0.15) !important;
+        }
+
+        .col-holiday {
+            background-color: rgba(231, 76, 60, 0.05);
+        }
+
+        .col-holiday-th {
+            background-color: rgba(231, 76, 60, 0.15) !important;
+            color: #ff6b6b !important;
+        }
+
+        /* --- BADGES (Optimized) --- */
+        .score-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 0;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        .score-high {
+            background: rgba(0,255,136,0.15);
+            color: #00ff88;
+            border: 1px solid rgba(0,255,136,0.5);
+        }
+
+        .score-med {
+            background: rgba(255,193,7,0.15);
+            color: #ffc107;
+            border: 1px solid rgba(255,193,7,0.5);
+        }
+
+        .score-low {
+            background: rgba(255,71,87,0.15);
+            color: #ff4757;
+            border: 1px solid rgba(255,71,87,0.5);
+        }
+
+        .score-na {
+            color: #666;
+            font-size: 0.8rem;
+            font-weight: normal;
+        }
+
+        .score-breakdown {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+            padding: 2px 4px;
+            margin-top: 4px;
+            font-size: 0.6rem;
+            font-family: Tahoma, sans-serif;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+            .score-breakdown span {
+                display: flex;
+                align-items: center;
+                gap: 2px;
+            }
+
+        .form-control:disabled, .form-control[readonly] {
+            background-color: unset;
+            opacity: 1;
+        }
+    </style>
+}
+
+<div class="report-container">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="mb-0 font-weight-bold"><i class="fa fa-calendar-check-o text-success mr-2"></i>Tablet Check-IN : Monthly Report</h2>
+        <div>
+            <button class="btn btn-outline-success rounded-pill shadow-sm mr-2 font-weight-bold text-white" onclick="exportExcel()"><i class="fa fa-file-excel-o mr-1"></i> Export Excel</button>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <div class="filter-item" style="flex: 0 0 auto; min-width: 180px;">
+            <label>Month / Year</label>
+            <input type="text" id="filter_month" class="form-control form-control-dark" placeholder="Select Month">
+        </div>
+        <div class="filter-item" style="flex: 1 1 200px;">
+            <label>Department</label>
+            <div class="dropdown">
+                <a href="#" class="dropdown-toggle-custom" id="deptDropdownBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span id="deptSelectedText" class="text-truncate">Loading...</span>
+                    <i class="fa fa-chevron-down small text-muted"></i>
+                </a>
+                <div class="dropdown-menu dept-dropdown-menu" aria-labelledby="deptDropdownBtn" id="deptListContainer">
+                    <div class="text-center text-muted small py-2"><i class="fa fa-circle-notch fa-spin mr-1"></i> Loading...</div>
+                </div>
+            </div>
+            <input type="hidden" id="filter_dept" value="">
+        </div>
+
+        <div class="filter-item" style="flex: 1 1 300px;">
+            <label>Search Everything (Real-time Filter)</label>
+            <div class="position-relative">
+                <input type="text" id="filter_search" class="form-control form-control-dark w-100 pl-5" placeholder="Asset, Owner, Score, Status...">
+                <i class="fa fa-search position-absolute text-muted" style="left: 15px; top: 12px;"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="table-report">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody">
+                <tr><td colspan="100" class="p-5 text-center text-muted">Loading Report...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/Scripts/tablet/flatpickr.js"></script>
+    <script src="~/Scripts/tablet/monthSelect.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            flatpickr("#filter_month", {
+                plugins: [
+                    new monthSelectPlugin({
+                        shorthand: true,
+                        dateFormat: "Y-m", // 🌟 ค่าจริงที่ใช้ค้นหา (yyyy-MM)
+                        altFormat: "m-Y"   // 🌟 รูปแบบที่โชว์ให้ User เห็น (MM-yyyy เช่น 03-2026)
+                    })
+                ],
+                altInput: true, // 🌟 สร้างช่อง Input จำลองขึ้นมาแสดงผล
+                altInputClass: "form-control form-control-dark date-picker-custom", // 🌟 เรียกใช้ CSS ที่ตั้งไว้
+                defaultDate: new Date(),
+                disableMobile: true,
+                onChange: function (selectedDates, dateStr, instance) {
+                    loadReport();
+                }
+            });
+
+            loadDepts();
+
+            $(document).on('click', '.dept-dropdown-menu', function (e) { e.stopPropagation(); });
+
+            // 🌟 1. ย้าย Universal Search มาจัดการที่ Client Side แทน ไม่ต้องหน่วง 5 วิ ไม่ต้องยิง API
+            $("#filter_search").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+                $("#tableBody tr").filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+        });
+
+        function loadDepts() {
+            fetch('@Url.Action("GetDepartments", "Report")')
+                .then(r => r.json())
+                .then(d => {
+                    let userSessionDept = '@(Session["Department"]?.ToString() ?? "")';
+                    let userRole = '@(Session["UserRole"]?.ToString() ?? "")';
+                    let mainDept = userSessionDept ? userSessionDept.split(',')[0].trim() : '';
+                    let filterToUser = (mainDept !== '' && userRole !== 'Admin');
+
+                    // 🌟 เพิ่ม event (e) เข้าไปใน onclick
+                    let html = `
+                        <div class="dept-checkbox-item" onclick="toggleDeptAll(event)">
+                            <input type="checkbox" id="chk_all_depts" ${filterToUser ? '' : 'checked'}>
+                            <label class="mb-0 w-100 cursor-pointer" for="chk_all_depts" style="pointer-events:none;">Select All</label>
+                        </div>
+                        <div class="dropdown-divider border-secondary my-1"></div>
+                    `;
+
+                    if (d && Array.isArray(d)) {
+                        d.forEach((dept, index) => {
+                            if (dept) {
+                                let isChecked = filterToUser ? (dept === mainDept ? 'checked' : '') : 'checked';
+                                // 🌟 เปลี่ยน onclick ให้เรียกใช้ฟังก์ชัน toggleItem แทน
+                                html += `
+                                    <div class="dept-checkbox-item" onclick="toggleItem(event, 'dept_chk_${index}')">
+                                        <input type="checkbox" class="dept-chk" value="${dept}" id="dept_chk_${index}" ${isChecked}>
+                                        <label class="mb-0 w-100 cursor-pointer" for="dept_chk_${index}" style="pointer-events:none;">${dept}</label>
+                                    </div>`;
+                            }
+                        });
+                    }
+                    $('#deptListContainer').html(html);
+                    updateDeptSelection();
+                });
+        }
+
+        // 🌟 อัปเดตฟังก์ชันนี้ ให้สลับค่า Checkbox ถ้าเราไม่ได้กดที่ตัวกล่อง Checkbox โดยตรง
+        function toggleDeptAll(e) {
+            if (e && e.target.type !== 'checkbox') {
+                let chk = document.getElementById('chk_all_depts');
+                chk.checked = !chk.checked;
+            }
+
+            setTimeout(() => {
+                let isChecked = $('#chk_all_depts').is(':checked');
+                $('.dept-chk').prop('checked', isChecked);
+                updateDeptSelection();
+            }, 10);
+        }
+
+        // 🌟 เพิ่มฟังก์ชันนี้เข้าไป (ของเดิมโดนลบไป) เพื่อให้กดที่ชื่อแผนกแล้วสลับค่า Checkbox ได้
+        function toggleItem(e, id) {
+            if (e && e.target.type !== 'checkbox') {
+                let chk = document.getElementById(id);
+                chk.checked = !chk.checked;
+            }
+            updateDeptSelection();
+        }
+
+
+        function updateDeptSelection() {
+            setTimeout(() => {
+                let selected = [];
+                $('.dept-chk:checked').each(function () { selected.push($(this).val()); });
+
+                $('#filter_dept').val(selected.join(','));
+
+                let total = $('.dept-chk').length;
+                let count = selected.length;
+                let text = "All Departments";
+
+                if (count === 0) {
+                    $('#filter_dept').val(''); $('#chk_all_depts').prop('checked', false);
+                    $('#deptDropdownBtn').css('border-color', 'rgba(255,255,255,0.15)').css('color', '#fff');
+                }
+                else if (count === total) {
+                    $('#chk_all_depts').prop('checked', true);
+                    $('#deptDropdownBtn').css('border-color', 'rgba(255,255,255,0.15)').css('color', '#fff');
+                }
+                else {
+                    $('#chk_all_depts').prop('checked', false);
+                    text = count === 1 ? selected[0] : `${count} Selected`;
+                    $('#deptDropdownBtn').css('border-color', '#00ff88').css('color', '#00ff88');
+                }
+
+                $('#deptSelectedText').text(text);
+
+                // 🌟 โหลดข้อมูลใหม่จากเซิร์ฟเวอร์เฉพาะตอนเปลี่ยนแผนก
+                loadReport();
+            }, 10);
+        }
+
+        function loadReport() {
+            let monthVal = $('#filter_month').val();
+            if (!monthVal) return;
+
+            $('#tableBody').html('<tr><td colspan="100"><div class="loading-container"><div class="loader-ring"></div><div class="loading-text">Loading...</div></div></td></tr>');
+
+            // 🌟 2. ถอดการส่งค่า Search ไปหลังบ้าน เพราะเราจะ Filter หน้าบ้านแทนแล้ว
+            const url = `@Url.Action("GetReportData", "Report")?month=${monthVal}&search=&dept=${encodeURIComponent($('#filter_dept').val())}`;
+
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    renderTable(data);
+
+                    // 🌟 3. ถ้าช่องค้นหามีข้อความค้างอยู่ ให้ Filter ซ้ำทันทีที่ตารางโหลดเสร็จ
+                    let currentSearch = $("#filter_search").val().toLowerCase();
+                    if(currentSearch) {
+                        $("#tableBody tr").filter(function() {
+                            $(this).toggle($(this).text().toLowerCase().indexOf(currentSearch) > -1)
+                        });
+                    }
+                })
+                .catch(err => { $('#tableBody').html('<tr><td colspan="100" class="text-danger text-center p-5">Connection Error</td></tr>'); });
+        }
+
+        function exportExcel() {
+            let monthVal = $('#filter_month').val();
+            let deptVal = $('#filter_dept').val() || '';
+            window.location.href = `@Url.Action("ExportExcel", "Report")?month=${monthVal}&dept=${encodeURIComponent(deptVal)}`;
+        }
+
+        function renderTable(data) {
+            let daysInMonth = data.days_in_month;
+            let holidays = data.holidays || {};
+
+            let h1 = `<tr>
+                        <th class="col-fixed" rowspan="2">IT Asset</th>
+                        <th class="col-score" rowspan="2">% สรุป</th>`;
+            let h2 = `<tr>`;
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                let isH = holidays[i] === 'H', isT = holidays[i] === 'T', isHoliday = isH || isT;
+                let thClass = isHoliday ? 'col-holiday-th text-danger' : '';
+                let ico = isH ? '●' : (isT ? '▲' : '');
+
+                h1 += `<th colspan="2" class="day-separator ${thClass}">${i} <small>${ico}</small></th>`;
+                h2 += `<th class="${thClass}">D</th><th class="day-separator ${thClass}">N</th>`;
+            }
+            h1 += `</tr>`; h2 += `</tr>`;
+            $('#tableHead').html(h1 + h2);
+
+            let body = '';
+            if (!data.rows || data.rows.length === 0) {
+                body = `<tr><td colspan="100" class="p-5 text-muted text-center">No data found.</td></tr>`;
+            } else {
+                data.rows.forEach(row => {
+                    let cells = '';
+                    let hasTarget = false;
+
+                    for (let d = 1; d <= daysInMonth; d++) {
+                        let isHoliday = (holidays[d] === 'H' || holidays[d] === 'T');
+                        let bgClass = isHoliday ? 'col-holiday' : '';
+                        let dayData = row.days[d.toString()] || { morn: { status: 'Future' }, night: { status: 'Future' } };
+
+                        if (['OK', 'Delay', 'Missed'].includes(dayData.morn.status) || ['OK', 'Delay', 'Missed'].includes(dayData.night.status)) {
+                            hasTarget = true;
+                        }
+
+                        cells += `<td class="${bgClass}">${renderCell(dayData.morn)}</td>
+                                  <td class="day-separator ${bgClass}">${renderCell(dayData.night)}</td>`;
+                    }
+
+                    let scoreHtml = `<span class="score-na">-</span>`;
+
+                    if (hasTarget) {
+                        let sc = row.score;
+                        let badgeClass = sc >= 90 ? 'score-high' : (sc >= 80 ? 'score-med' : 'score-low');
+
+                        scoreHtml = `
+                            <div class="score-badge ${badgeClass}">${sc}%</div>
+                            <div class="score-breakdown">
+                                <span class="text-success" title="OK"><i class="fa fa-check"></i>${row.count_ok}</span>
+                                <span class="text-warning" title="Delay"><i class="fa fa-exclamation"></i>${row.count_delay}</span>
+                                <span class="text-danger" title="Missed"><i class="fa fa-times"></i>${row.count_missed}</span>
+                            </div>`;
+                    }
+
+                    body += `
+                        <tr>
+                            <td class="col-fixed">
+                                <div class="font-weight-bold text-white text-truncate">${row.asset_no}</div>
+                                <div class="small text-info text-truncate">${row.owner_name}</div>
+                                <div class="small text-muted" style="font-size:0.65rem; margin-top:2px;">
+                                    <i class="fa fa-calendar-o"></i> Reg: ${row.registered_at}
+                                </div>
+                            </td>
+                            <td class="col-score">${scoreHtml}</td>
+                            ${cells}
+                        </tr>`;
+                });
+            }
+            document.getElementById('tableBody').innerHTML = body;
+        }
+
+        // 🌟 4. แก้ไขการ Render Cell ให้ใส่เวลาไว้ด้านบนไอคอน 🌟
+        function renderCell(slotData) {
+            if (!slotData) return '';
+            let s = slotData.status;
+            let timeStr = slotData.time ? `<div class="time-text">${slotData.time}</div>` : '';
+
+            if (s === 'OK') return `<div class="cell-status st-ok" title="OK">${timeStr}<div class="status-icon"><i class="fa fa-check"></i></div></div>`;
+            if (s === 'Delay') return `<div class="cell-status st-delay" title="Delay">${timeStr}<div class="status-icon"><i class="fa fa-exclamation"></i></div></div>`;
+            if (s === 'Missed') return `<div class="cell-status st-missed" title="Missed"><div class="status-icon"><i class="fa fa-times"></i></div></div>`;
+            if (s === 'Wait') return `<div class="cell-status st-wait" title="Wait"><div class="status-icon"><i class="fa fa-clock-o"></i></div></div>`;
+            if (s === 'Stock') return `<div class="cell-status st-stock" title="Stock"><div class="status-icon"><i class="fa fa-archive"></i></div></div>`;
+
+            if (s === 'NA') return `<div class="cell-status st-na" style="border:none;"></div>`;
+            return `<div class="cell-status st-future" title="${s}">-</div>`;
+        }
+    </script>
+}
